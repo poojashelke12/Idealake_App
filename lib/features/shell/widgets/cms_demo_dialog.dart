@@ -3,16 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../core/di/service_locator.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/ui_helpers.dart';
 import '../../../core/widgets/custom_button.dart';
-import '../../announcements/models/announcement_model.dart';
-import '../../announcements/repository/announcement_repository.dart';
-import '../../announcements/view_model/announcements_bloc.dart';
-import '../../announcements/view_model/announcements_event.dart';
+import '../../news/view_model/news_bloc.dart';
+import '../../news/view_model/news_event.dart';
 
-/// Interactive Demo Helper to demonstrate Sitefinity Authoring -> Mobile Instant Sync
+/// Interactive Demo Helper to demonstrate Sitefinity CMS live mobile sync
 class CmsDemoDialog extends StatelessWidget {
   const CmsDemoDialog({super.key});
 
@@ -65,42 +62,28 @@ class CmsDemoDialog extends StatelessWidget {
             const Divider(color: AppColors.divider),
             const SizedBox(height: 14),
             Text(
-              'Simulate Live CMS Authoring',
+              'Simulate Live CMS Sync',
               style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Text(
-              'Publish a live announcement into the Sitefinity headless feed to test real-time mobile sync on pull-to-refresh.',
+              'Trigger a live synchronization with Sitefinity headless REST APIs to refresh content and media assets in real-time.',
               style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 18),
             CustomButton(
-              text: 'Simulate CMS Publish Item',
-              prefixIcon: const Icon(Icons.cloud_upload_rounded, color: AppColors.textWhite, size: 18),
-              onPressed: () async {
-                final timestamp = DateTime.now();
-                final demoAnnouncement = AnnouncementModel(
-                  id: 'demo-${timestamp.millisecondsSinceEpoch}',
-                  title: '✨ [Sitefinity Live] Digital Lending 2.0 Feature Release',
-                  body:
-                      'Authored in Sitefinity Admin at ${timestamp.hour}:${timestamp.minute}:${timestamp.second}. Published via Headless OData API without needing an app store release!',
-                  effectiveDate: timestamp,
-                  audience: 'All Employees',
-                  priority: 'Urgent',
-                  attachmentName: 'Sitefinity_Live_Payload.json',
-                );
-
-                await locator<AnnouncementRepository>().simulatePublishNewAnnouncement(demoAnnouncement);
-                if (!context.mounted) return;
+              text: 'Simulate Live CMS Sync',
+              prefixIcon: const Icon(Icons.sync_rounded, color: AppColors.textWhite, size: 18),
+              onPressed: () {
+                context.read<NewsBloc>().add(const NewsFetchEvent(forceRefresh: true));
                 Navigator.pop(context);
-                context.read<AnnouncementsBloc>().add(const AnnouncementsFetchEvent(forceRefresh: true));
                 UIHelpers.showSuccessSnackBar(
                   context,
-                  'Published to Sitefinity! Feed refreshed live.',
+                  'Triggered Sitefinity live sync! Latest data refreshed.',
                 );
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             CustomButton(
               text: 'Close',
               buttonType: ButtonType.text,

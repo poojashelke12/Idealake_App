@@ -24,7 +24,6 @@ class ApiEndpoints {
   static const String awardImagesParentId =
       'd7e1016a-bcbb-4e04-bf78-4029b71d7d6a';
 
-  static const String policies = '/api/idealake/policies';
   static const String documents = '/api/idealake/documents';
   static const String documentLibraries = '/api/idealake/document-libraries';
   static const String idealakeImages = '/api/idealake/images';

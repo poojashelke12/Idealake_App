@@ -1,8 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../features/announcements/repository/announcement_repository.dart';
-import '../../features/announcements/view_model/announcements_bloc.dart';
 import '../../features/auth/repository/auth_repository.dart';
 import '../../features/auth/view_model/auth_bloc.dart';
 import '../../features/documents/repository/documents_repository.dart';
@@ -11,8 +9,6 @@ import '../../features/home/repository/home_repository.dart';
 import '../../features/home/view_model/home_bloc.dart';
 import '../../features/news/repository/news_repository.dart';
 import '../../features/news/view_model/news_bloc.dart';
-import '../../features/policies/repository/policy_repository.dart';
-import '../../features/policies/view_model/policies_bloc.dart';
 import '../../features/splash/view_model/splash_bloc.dart';
 import '../network/base_api_service.dart';
 import '../network/dio_client.dart';
@@ -31,14 +27,8 @@ Future<void> setupServiceLocator() async {
   locator.registerLazySingleton<BaseApiService>(() => NetworkApiService(locator<DioClient>()));
 
   // 3. Repositories (Model Layer)
-  locator.registerLazySingleton<AnnouncementRepository>(
-    () => AnnouncementRepository(locator<BaseApiService>(), locator<SharedPreferences>()),
-  );
   locator.registerLazySingleton<NewsRepository>(
     () => NewsRepository(locator<BaseApiService>(), locator<SharedPreferences>()),
-  );
-  locator.registerLazySingleton<PolicyRepository>(
-    () => PolicyRepository(locator<BaseApiService>(), locator<SharedPreferences>()),
   );
   locator.registerLazySingleton<DocumentsRepository>(
     () => DocumentsRepository(locator<BaseApiService>(), locator<SharedPreferences>()),
@@ -52,9 +42,7 @@ Future<void> setupServiceLocator() async {
 
   // 4. ViewModels / BLoCs (ViewModel Layer)
   locator.registerFactory<SplashBloc>(() => SplashBloc(locator<SharedPreferences>()));
-  locator.registerFactory<AnnouncementsBloc>(() => AnnouncementsBloc(locator<AnnouncementRepository>()));
   locator.registerFactory<NewsBloc>(() => NewsBloc(locator<NewsRepository>()));
-  locator.registerFactory<PoliciesBloc>(() => PoliciesBloc(locator<PolicyRepository>()));
   locator.registerFactory<DocumentsBloc>(() => DocumentsBloc(locator<DocumentsRepository>()));
   locator.registerFactory<HomeBloc>(() => HomeBloc(locator<HomeRepository>()));
   locator.registerFactory<AuthBloc>(() => AuthBloc(locator<AuthRepository>()));
