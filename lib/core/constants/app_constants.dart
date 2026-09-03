@@ -7,6 +7,8 @@ class AppConstants {
   static const String keyRefreshToken = 'refresh_token';
   static const String keyTokenType = 'token_type';
   static const String keyExpiresIn = 'expires_in';
+  static const String keySfTokenId = 'sf_token_id';
+  static const String defaultSfTokenId = '0f98ea2d-ca27-4041-8a6c-1e80214c50eb';
   static const String keyUserData = 'user_data';
   static const String keyIsLoggedIn = 'is_logged_in';
   static const String keyThemeMode = 'theme_mode';

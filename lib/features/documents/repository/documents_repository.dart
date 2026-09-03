@@ -63,29 +63,86 @@ class DocumentsRepository {
     return libraries;
   }
 
-  /// Fetch all Documents inside a specific Library (Level 2)
+  /// Fetch all Documents inside a specific Library (Level 2) directly from Sitefinity CMS OData API
   Future<List<DocumentModel>> fetchDocumentsInLibrary(
     String libraryId, {
     bool forceRefresh = false,
     String? searchQuery,
     bool offlineOnly = false,
   }) async {
-    List<DocumentModel> allDocs = _getCachedDocuments();
-    if (allDocs.isEmpty) {
-      allDocs = _getInitialPocDocuments();
-      await _cacheDocuments(allDocs);
+    List<DocumentModel> allDocs = [];
+
+    // 1. If not forcing refresh, check local cache first
+    if (!forceRefresh) {
+      allDocs = _getCachedDocuments();
     }
 
-    var items = allDocs.where((doc) => doc.libraryId == libraryId).toList();
+    // 2. Fetch from live Sitefinity Document API (/api/default/documents)
+    if (allDocs.isEmpty || forceRefresh) {
+      try {
+        final queryParams = ODataQueryBuilder()
+            .orderBy('LastModified', ascending: false)
+            .build();
 
-    // Attach downloaded state
+        final response = await _apiService.getGetApiResponse(
+          ApiEndpoints.documents,
+          queryParameters: queryParams,
+        );
+
+        if (response != null && (response['value'] is List || response['data'] is List)) {
+          final list = (response['value'] ?? response['data']) as List;
+          final apiDocs = list
+              .map((e) => DocumentModel.fromJson(e as Map<String, dynamic>))
+              .toList();
+
+          if (apiDocs.isNotEmpty) {
+            allDocs = apiDocs;
+            await _cacheDocuments(allDocs);
+          }
+        }
+      } catch (_) {
+        // Fallback to cached documents or initial POC documents on network/auth error
+        if (allDocs.isEmpty) {
+          allDocs = _getCachedDocuments();
+          if (allDocs.isEmpty) {
+            allDocs = _getInitialPocDocuments();
+            await _cacheDocuments(allDocs);
+          }
+        }
+      }
+    }
+
+    if (allDocs.isEmpty) {
+      allDocs = _getCachedDocuments();
+      if (allDocs.isEmpty) {
+        allDocs = _getInitialPocDocuments();
+        await _cacheDocuments(allDocs);
+      }
+    }
+
+    // 3. Filter by libraryId if specified and matches any document
+    var items = allDocs.where((doc) {
+      if (libraryId.isEmpty || libraryId == 'all' || libraryId == 'lib-001' || libraryId == 'lib-002') {
+        return doc.libraryId == libraryId || doc.libraryId.isEmpty || doc.libraryId == 'lib-001';
+      }
+      return doc.libraryId == libraryId;
+    }).toList();
+
+    // If no items matched the specific local ID, present all dynamic documents from API
+    if (items.isEmpty && allDocs.isNotEmpty) {
+      items = List.from(allDocs);
+    }
+
+    // 4. Attach offline downloaded state
     final downloadedIds = _getDownloadedIds();
     items = items.map((doc) => doc.copyWith(isDownloaded: downloadedIds.contains(doc.id))).toList();
 
+    // 5. Offline only filter
     if (offlineOnly) {
       items = items.where((doc) => doc.isDownloaded).toList();
     }
 
+    // 6. Search query filter
     if (searchQuery != null && searchQuery.trim().isNotEmpty) {
       final query = searchQuery.trim().toLowerCase();
       items = items.where((item) {

@@ -58,6 +58,12 @@ class AuthRepository {
       if (expiresIn != null && expiresIn.isNotEmpty) {
         await _prefs.setString(AppConstants.keyExpiresIn, expiresIn);
       }
+      if (data['sf_token_id'] != null || data['SF-TokenId'] != null) {
+        await _prefs.setString(
+          AppConstants.keySfTokenId,
+          (data['sf_token_id'] ?? data['SF-TokenId']).toString(),
+        );
+      }
 
       final user = UserModel(
         id: data['id']?.toString() ?? 'usr-101',
@@ -102,12 +108,19 @@ class AuthRepository {
     return _prefs.getString(AppConstants.keyAuthToken);
   }
 
+  /// Explicitly store an authentication token
+  Future<void> saveAuthToken(String token) async {
+    await _prefs.setString(AppConstants.keyAuthToken, token.trim());
+    await _prefs.setBool(AppConstants.keyIsLoggedIn, true);
+  }
+
   /// Explicitly clear all stored tokens and session data from local storage
   Future<void> clearToken() async {
     await _prefs.remove(AppConstants.keyAuthToken);
     await _prefs.remove(AppConstants.keyRefreshToken);
     await _prefs.remove(AppConstants.keyTokenType);
     await _prefs.remove(AppConstants.keyExpiresIn);
+    await _prefs.remove(AppConstants.keySfTokenId);
     await _prefs.remove(AppConstants.keyIsLoggedIn);
     await _prefs.remove(AppConstants.keyUserData);
   }
