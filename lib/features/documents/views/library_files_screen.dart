@@ -36,7 +36,7 @@ class _LibraryFilesScreenState extends State<LibraryFilesScreen> {
   void initState() {
     super.initState();
     context.read<DocumentsBloc>().add(
-          DocumentsFetchFilesInLibraryEvent(widget.library),
+          DocumentsFetchFilesInLibraryEvent(widget.library, forceRefresh: true),
         );
   }
 

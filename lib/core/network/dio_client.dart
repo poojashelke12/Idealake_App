@@ -34,7 +34,7 @@ class DioClient {
   Dio get dio => _dio;
 }
 
-/// Injects Bearer auth token if available into request headers
+/// Injects Bearer auth token and Cookie if available into request headers
 class _AuthInterceptor extends Interceptor {
   final SharedPreferences _prefs;
 
@@ -42,12 +42,20 @@ class _AuthInterceptor extends Interceptor {
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    // 1. Inject Authorization header if token exists
     final token = _prefs.getString(AppConstants.keyAuthToken);
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     } else {
       options.headers.remove('Authorization');
     }
+
+    // 2. Inject Cookie header with SF-TokenId if available
+    final sfTokenId = _prefs.getString(AppConstants.keySfTokenId) ?? AppConstants.defaultSfTokenId;
+    if (sfTokenId.isNotEmpty && !options.headers.containsKey('Cookie')) {
+      options.headers['Cookie'] = 'SF-TokenId=$sfTokenId';
+    }
+
     return handler.next(options);
   }
 }
