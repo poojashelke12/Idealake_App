@@ -38,3 +38,60 @@ class NewsTagFilterEvent extends NewsEvent {
   @override
   List<Object?> get props => [tag];
 }
+
+class NewsCreateEvent extends NewsEvent {
+  final dynamic newsItem;
+  const NewsCreateEvent(this.newsItem);
+
+  @override
+  List<Object?> get props => [newsItem];
+}
+
+class NewsDeleteEvent extends NewsEvent {
+  final String id;
+  const NewsDeleteEvent(this.id);
+
+  @override
+  List<Object?> get props => [id];
+}
+
+class NewsBulkDeleteEvent extends NewsEvent {
+  final List<String> ids;
+  const NewsBulkDeleteEvent(this.ids);
+
+  @override
+  List<Object?> get props => [ids];
+}
+
+class NewsDuplicateEvent extends NewsEvent {
+  final dynamic item;
+  const NewsDuplicateEvent(this.item);
+
+  @override
+  List<Object?> get props => [item];
+}
+
+class NewsTogglePublishEvent extends NewsEvent {
+  final String id;
+  final bool publish;
+  const NewsTogglePublishEvent(this.id, this.publish);
+
+  @override
+  List<Object?> get props => [id, publish];
+}
+
+class NewsStatusFilterEvent extends NewsEvent {
+  final String status;
+  const NewsStatusFilterEvent(this.status);
+
+  @override
+  List<Object?> get props => [status];
+}
+
+class NewsSortChangeEvent extends NewsEvent {
+  final String sortOption;
+  const NewsSortChangeEvent(this.sortOption);
+
+  @override
+  List<Object?> get props => [sortOption];
+}

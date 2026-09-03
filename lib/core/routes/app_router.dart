@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../features/auth/views/login_screen.dart';
 import '../../features/career/views/career_screen.dart';
 import '../../features/news/models/news_model.dart';
+import '../../features/news/views/create_news_screen.dart';
 import '../../features/news/views/news_detail_screen.dart';
 import '../../features/shell/views/main_nav_screen.dart';
 import '../../features/splash/views/splash_screen.dart';
@@ -36,6 +37,13 @@ class AppRouter {
         final news = settings.arguments as NewsModel;
         return MaterialPageRoute(
           builder: (_) => NewsDetailScreen(news: news),
+          settings: settings,
+        );
+
+      case AppRoutes.createNews:
+        final news = settings.arguments as NewsModel?;
+        return MaterialPageRoute(
+          builder: (_) => CreateNewsScreen(initialNews: news),
           settings: settings,
         );
 

@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/text_styles.dart';
-import '../../../core/utils/date_formatter.dart';
 import '../../../core/utils/ui_helpers.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../models/news_model.dart';
+import 'create_news_screen.dart';
 
 /// Screen displaying the full Rich-Text News Article & Hero Media
 class NewsDetailScreen extends StatelessWidget {
@@ -17,21 +17,30 @@ class NewsDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isPublished = news.status.toLowerCase() == 'published';
+
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: CustomAppBar(
         title: 'News Article',
         actions: [
           IconButton(
-            icon: const Icon(Icons.share_outlined, color: AppColors.textPrimary),
+            icon: const Icon(Icons.edit_outlined, color: AppColors.textPrimary),
+            tooltip: 'Edit Article',
             onPressed: () {
-              UIHelpers.showSuccessSnackBar(context, 'Link to "${news.title}" copied to clipboard');
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CreateNewsScreen(initialNews: news),
+                ),
+              );
             },
           ),
           IconButton(
-            icon: const Icon(Icons.bookmark_border_rounded, color: AppColors.textPrimary),
+            icon: const Icon(Icons.share_outlined, color: AppColors.textPrimary),
+            tooltip: 'Share Article',
             onPressed: () {
-              UIHelpers.showSuccessSnackBar(context, 'Article saved to your bookmarks');
+              UIHelpers.showSuccessSnackBar(context, 'Link to "${news.title}" copied to clipboard');
             },
           ),
         ],
@@ -40,22 +49,22 @@ class NewsDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Hero Image
+            // Hero Image if present
             if (news.heroImageUrl != null && news.heroImageUrl!.isNotEmpty)
               CachedNetworkImage(
                 imageUrl: news.heroImageUrl!,
-                height: 240,
+                height: 220,
                 width: double.infinity,
                 fit: BoxFit.cover,
                 placeholder: (context, url) => Container(
-                  height: 240,
+                  height: 220,
                   color: AppColors.primaryContainer,
                   child: const Center(child: CircularProgressIndicator(color: AppColors.primary)),
                 ),
                 errorWidget: (context, url, error) => Container(
-                  height: 240,
+                  height: 220,
                   color: AppColors.primaryContainer,
-                  child: const Icon(Icons.image_not_supported_rounded, size: 48, color: AppColors.primary),
+                  child: const Icon(Icons.newspaper_rounded, size: 48, color: AppColors.primary),
                 ),
               ),
 
@@ -64,14 +73,45 @@ class NewsDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Category & Date Metadata
+                  // Status & Category Row
                   Row(
                     children: [
+                      // Published Badge
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isPublished ? const Color(0xFFE6F4EA) : const Color(0xFFFEF3C7),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: isPublished ? const Color(0xFF00965E).withValues(alpha: 0.3) : const Color(0xFFD97706),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isPublished ? Icons.check_circle_rounded : Icons.edit_note_rounded,
+                              size: 14,
+                              color: isPublished ? const Color(0xFF00965E) : const Color(0xFFD97706),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              news.status,
+                              style: AppTextStyles.labelSmall.copyWith(
+                                color: isPublished ? const Color(0xFF00965E) : const Color(0xFFD97706),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: AppColors.primaryContainer,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           news.category,
@@ -81,17 +121,14 @@ class NewsDetailScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Text(
-                        AppFormatter.formatDate(news.publishedDate),
-                        style: AppTextStyles.labelMedium.copyWith(color: AppColors.textTertiary),
-                      ),
                       const Spacer(),
+
+                      // Formatted date
                       Text(
-                        news.author,
+                        news.formattedAuthorAndDate,
                         style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.textSecondary,
-                          fontStyle: FontStyle.italic,
+                          color: AppColors.textTertiary,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
@@ -104,54 +141,78 @@ class NewsDetailScreen extends StatelessWidget {
                     style: AppTextStyles.headlineMedium.copyWith(
                       fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary,
-                      height: 1.3,
+                      height: 1.25,
                     ),
                   ),
                   const SizedBox(height: 14),
 
-                  // Summary Callout
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.background,
-                      borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
-                      border: const Border(
-                        left: BorderSide(color: AppColors.secondary, width: 4),
+                  // Summary Callout Box
+                  if (news.summary.isNotEmpty)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+                        border: const Border(
+                          left: BorderSide(color: Color(0xFF00965E), width: 4),
+                        ),
+                      ),
+                      child: Text(
+                        news.summary,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w500,
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
                     ),
-                    child: Text(
-                      news.summary,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w500,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ),
                   const SizedBox(height: 20),
 
-                  // Body content formatted
+                  // Body Content Formatted
                   _buildArticleContent(news.contentHtml),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 24),
+
+                  // Source Info (if available)
+                  if (news.sourceName != null && news.sourceName!.isNotEmpty) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.source_rounded, size: 18, color: AppColors.textSecondary),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Source: ${news.sourceName}',
+                            style: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
                   // Tags Section
                   if (news.tags.isNotEmpty) ...[
                     const Divider(color: AppColors.divider),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 12),
                     Text(
-                      'Related Topics',
+                      'Tags & Topics',
                       style: AppTextStyles.titleSmall.copyWith(
                         fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
                       children: news.tags.map((tag) {
                         return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
                             color: AppColors.background,
                             borderRadius: BorderRadius.circular(16),
@@ -160,14 +221,40 @@ class NewsDetailScreen extends StatelessWidget {
                           child: Text(
                             '#$tag',
                             style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.primary,
+                              color: const Color(0xFF00965E),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                         );
                       }).toList(),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
+                  ],
+
+                  // Comments section indicator
+                  if (news.allowComments) ...[
+                    const Divider(color: AppColors.divider),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Comments',
+                          style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        TextButton.icon(
+                          onPressed: () {
+                            UIHelpers.showSnackBar(context, 'Comments feature enabled for this article.');
+                          },
+                          icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16, color: Color(0xFF00965E)),
+                          label: const Text(
+                            'Add Comment',
+                            style: TextStyle(color: Color(0xFF00965E), fontWeight: FontWeight.bold, fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
                   ],
                 ],
               ),
@@ -179,7 +266,8 @@ class NewsDetailScreen extends StatelessWidget {
   }
 
   Widget _buildArticleContent(String htmlContent) {
-    // Clean text parser rendering HTML-like structure cleanly
+    if (htmlContent.isEmpty) return const SizedBox.shrink();
+
     final plainText = htmlContent
         .replaceAll(RegExp(r'<h3[^>]*>'), '\n\n### ')
         .replaceAll(RegExp(r'</h3>'), '\n')
@@ -190,10 +278,12 @@ class NewsDetailScreen extends StatelessWidget {
         .replaceAll(RegExp(r'<[^>]*>'), '')
         .replaceAll('&quot;', '"')
         .replaceAll('&amp;', '&')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
         .trim();
 
     return Text(
-      plainText,
+      plainText.isNotEmpty ? plainText : 'No content body available.',
       style: AppTextStyles.bodyLarge.copyWith(
         color: AppColors.textPrimary,
         height: 1.7,

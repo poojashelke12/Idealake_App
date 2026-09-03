@@ -32,8 +32,8 @@ void main() {
 
     await tester.pumpWidget(const IdealakeApp());
     expect(find.text(AppStrings.appName), findsOneWidget);
-    await tester.pump(const Duration(seconds: 2));
-    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump(const Duration(seconds: 1));
     expect(find.text('Dashboard'), findsOneWidget);
   });
 }

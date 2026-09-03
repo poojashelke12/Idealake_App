@@ -23,28 +23,46 @@ class NewsRepository {
   }) async {
     List<NewsModel> items = [];
 
-    try {
-      final queryParams = ODataQueryBuilder()
-          .orderBy('PublicationDate', ascending: false)
-          .build();
+    // 1. If not forcing refresh, check cache first
+    if (!forceRefresh) {
+      items = _getCachedData();
+    }
 
-      final response = await _apiService.getGetApiResponse(
-        ApiEndpoints.contents,
-        queryParameters: queryParams,
-      );
+    // 2. Fetch from live Sitefinity NewsItems API (/api/idealake/newsitems)
+    if (items.isEmpty || forceRefresh) {
+      try {
+        final queryParams = ODataQueryBuilder()
+            .orderBy('PublicationDate', ascending: false)
+            .build();
 
-      if (response != null && (response['value'] is List || response['data'] is List)) {
-        final list = (response['value'] ?? response['data']) as List;
-        items = list.map((e) => NewsModel.fromJson(e as Map<String, dynamic>)).toList();
-        await _cacheData(items);
-      } else {
-        items = _getCachedData();
+        final response = await _apiService.getGetApiResponse(
+          ApiEndpoints.newsItems,
+          queryParameters: queryParams,
+        );
+
+        if (response != null && (response['value'] is List || response['data'] is List)) {
+          final list = (response['value'] ?? response['data']) as List;
+          final apiItems = list
+              .map((e) => NewsModel.fromJson(e as Map<String, dynamic>))
+              .toList();
+
+          if (apiItems.isNotEmpty) {
+            items = apiItems;
+            await _cacheData(items);
+          }
+        }
+      } catch (_) {
         if (items.isEmpty) {
-          items = _getInitialPocNews();
-          await _cacheData(items);
+          items = _getCachedData();
+          if (items.isEmpty) {
+            items = _getInitialPocNews();
+            await _cacheData(items);
+          }
         }
       }
-    } catch (_) {
+    }
+
+    if (items.isEmpty) {
       items = _getCachedData();
       if (items.isEmpty) {
         items = _getInitialPocNews();
@@ -52,12 +70,14 @@ class NewsRepository {
       }
     }
 
-    // Client-side search & category filtering
+    // 3. Client-side search & category filtering
     if (searchQuery != null && searchQuery.trim().isNotEmpty) {
       final query = searchQuery.trim().toLowerCase();
       items = items.where((item) {
         return item.title.toLowerCase().contains(query) ||
             item.summary.toLowerCase().contains(query) ||
+            item.contentHtml.toLowerCase().contains(query) ||
+            item.author.toLowerCase().contains(query) ||
             item.tags.any((t) => t.toLowerCase().contains(query));
       }).toList();
     }
@@ -70,8 +90,71 @@ class NewsRepository {
       items = items.where((item) => item.tags.any((t) => t.toLowerCase() == tagFilter.toLowerCase())).toList();
     }
 
-    items.sort((a, b) => b.publishedDate.compareTo(a.publishedDate));
+    items.sort((a, b) => (b.lastModified ?? b.publishedDate).compareTo(a.lastModified ?? a.publishedDate));
     return items;
+  }
+
+  /// Create and Publish or Save Draft a new News item
+  Future<void> createNewsItem(NewsModel newsItem) async {
+    final current = _getCachedData();
+    final updated = [newsItem, ...current];
+    await _cacheData(updated);
+
+    // Attempt to post to live backend
+    try {
+      await _apiService.getPostApiResponse(
+        ApiEndpoints.newsItems,
+        newsItem.toJson(),
+      );
+    } catch (_) {
+      // Retained in local cache
+    }
+  }
+
+  /// Delete a news item by ID
+  Future<void> deleteNewsItem(String id) async {
+    final current = _getCachedData();
+    final updated = current.where((item) => item.id != id).toList();
+    await _cacheData(updated);
+  }
+
+  /// Bulk delete news items by list of IDs
+  Future<void> bulkDeleteNewsItems(List<String> ids) async {
+    final current = _getCachedData();
+    final idSet = ids.toSet();
+    final updated = current.where((item) => !idSet.contains(item.id)).toList();
+    await _cacheData(updated);
+  }
+
+  /// Duplicate a news item
+  Future<NewsModel> duplicateNewsItem(NewsModel original) async {
+    final now = DateTime.now();
+    final duplicated = original.copyWith(
+      id: 'news-${now.millisecondsSinceEpoch}',
+      title: '${original.title} (Copy)',
+      urlName: '${original.urlName}-copy',
+      dateCreated: now,
+      lastModified: now,
+      publishedDate: now,
+      status: 'Draft',
+    );
+    await createNewsItem(duplicated);
+    return duplicated;
+  }
+
+  /// Toggle publish / unpublish status of a news item
+  Future<void> togglePublishStatus(String id, bool publish) async {
+    final current = _getCachedData();
+    final updated = current.map((item) {
+      if (item.id == id) {
+        return item.copyWith(
+          status: publish ? 'Published' : 'Unpublished',
+          lastModified: DateTime.now(),
+        );
+      }
+      return item;
+    }).toList();
+    await _cacheData(updated);
   }
 
   Future<void> _cacheData(List<NewsModel> items) async {
@@ -91,61 +174,40 @@ class NewsRepository {
   }
 
   List<NewsModel> _getInitialPocNews() {
+    final now = DateTime.now();
     return [
       NewsModel(
         id: 'news-001',
-        title: 'Idealake Launches Next-Gen Omnichannel Platform for LTFS',
-        summary:
-            'A unified digital platform built with Flutter and Progress Sitefinity CMS delivers lightning-fast mobile services and seamless content governance.',
-        contentHtml: '''
-<h3>Digital Transformation at Scale</h3>
-<p>Idealake Information Technologies has successfully architected and deployed the next-generation omnichannel digital backbone for LTFS. By integrating Progress Sitefinity's headless CMS engine with high-performance Flutter mobile applications, financial services and corporate updates are synchronized across channels with zero latency.</p>
-
-<h3>Key Architectural Pillars</h3>
-<ul>
-  <li><strong>Headless CMS:</strong> Content decoupled from presentation for maximum flexibility.</li>
-  <li><strong>OData API standard:</strong> Standardized query parameters (\$filter, \$orderby, \$skip) reducing payload sizes.</li>
-  <li><strong>Offline Availability:</strong> Intelligent caching layers ensure content accessibility in low connectivity zones.</li>
-</ul>
-
-<p>This integration marks a critical milestone in modernizing enterprise content delivery without requiring continuous app store rollouts.</p>
-''',
-        heroImageUrl: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=800&q=80',
-        publishedDate: DateTime.now().subtract(const Duration(hours: 5)),
-        author: 'Idealake Editorial',
-        tags: const ['Fintech', 'Flutter', 'Sitefinity', 'Innovation'],
+        title: 'test1',
+        summary: 'Sitefinity Headless CMS news update and publication notice.',
+        contentHtml: '<p>Real-time news item created and published from Sitefinity Headless CMS admin panel.</p>',
+        publishedDate: now,
+        lastModified: now,
+        dateCreated: now,
+        author: 'Pooja Shelke',
+        urlName: 'test1',
+        itemDefaultUrl: '/${now.year}/${now.month.toString().padLeft(2, '0')}/${now.day.toString().padLeft(2, '0')}/test1',
+        allowComments: true,
+        includeInSitemap: true,
+        status: 'Published',
+        tags: const ['Sitefinity', 'CMS', 'Headless'],
         category: 'Technology',
       ),
       NewsModel(
         id: 'news-002',
-        title: 'Progress Sitefinity 15.1 Headless Services Benchmark Report',
-        summary:
-            'Performance tests demonstrate sub-120ms JSON response times and 99.99% availability for enterprise mobile content consumers.',
-        contentHtml: '''
-<h3>High-Velocity API Delivery</h3>
-<p>Recent load testing on Sitefinity's REST and OData web services demonstrated outstanding throughput, maintaining sub-120ms response times across 10,000 concurrent mobile requests.</p>
-<p>With native support for JWT authentication and granular role-based permissions, enterprise media libraries and structured content types can be securely consumed by iOS and Android clients.</p>
-''',
-        heroImageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80',
-        publishedDate: DateTime.now().subtract(const Duration(days: 1)),
-        author: 'Cloud Architecture Team',
-        tags: const ['Sitefinity', 'OData', 'Performance'],
-        category: 'Product',
-      ),
-      NewsModel(
-        id: 'news-003',
-        title: 'LTFS Financial Results: Strong Digital Adoption Drives Q2 Growth',
-        summary:
-            'Over 75% of customer servicing and corporate engagements are now handled through digital channels and automated self-service apps.',
-        contentHtml: '''
-<h3>Q2 Financial Highlights</h3>
-<p>LTFS announced impressive growth across all retail finance portfolios, driven heavily by accelerated digital adoption and modern customer self-service capabilities designed by Idealake.</p>
-<p>The transition to agile headless platforms has lowered operational overhead while elevating customer satisfaction scores across touchpoints.</p>
-''',
-        heroImageUrl: 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=800&q=80',
-        publishedDate: DateTime.now().subtract(const Duration(days: 3)),
-        author: 'Corporate Relations',
-        tags: const ['Finance', 'Growth', 'Strategy'],
+        title: 'test',
+        summary: 'General enterprise announcements and digital transformation initiatives.',
+        contentHtml: '<p>Comprehensive enterprise updates published across omni-channel mobile apps.</p>',
+        publishedDate: now.subtract(const Duration(days: 1)),
+        lastModified: now.subtract(const Duration(days: 1)),
+        dateCreated: now.subtract(const Duration(days: 1)),
+        author: 'Pooja Shelke',
+        urlName: 'test',
+        itemDefaultUrl: '/${now.year}/${now.month.toString().padLeft(2, '0')}/${(now.day - 1).toString().padLeft(2, '0')}/test',
+        allowComments: true,
+        includeInSitemap: true,
+        status: 'Published',
+        tags: const ['Innovation', 'LTFS'],
         category: 'Corporate',
       ),
     ];
