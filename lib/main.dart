@@ -7,12 +7,10 @@ import 'core/di/service_locator.dart';
 import 'core/routes/app_router.dart';
 import 'core/routes/app_routes.dart';
 import 'core/theme/app_theme.dart';
-import 'features/announcements/view_model/announcements_bloc.dart';
 import 'features/auth/view_model/auth_bloc.dart';
 import 'features/documents/view_model/documents_bloc.dart';
 import 'features/home/view_model/home_bloc.dart';
 import 'features/news/view_model/news_bloc.dart';
-import 'features/policies/view_model/policies_bloc.dart';
 import 'features/splash/view_model/splash_bloc.dart';
 
 void main() async {
@@ -39,11 +37,7 @@ class IdealakeApp extends StatelessWidget {
       providers: [
         BlocProvider<SplashBloc>(create: (_) => locator<SplashBloc>()),
         BlocProvider<HomeBloc>(create: (_) => locator<HomeBloc>()),
-        BlocProvider<AnnouncementsBloc>(
-          create: (_) => locator<AnnouncementsBloc>(),
-        ),
         BlocProvider<NewsBloc>(create: (_) => locator<NewsBloc>()),
-        BlocProvider<PoliciesBloc>(create: (_) => locator<PoliciesBloc>()),
         BlocProvider<DocumentsBloc>(create: (_) => locator<DocumentsBloc>()),
         BlocProvider<AuthBloc>(create: (_) => locator<AuthBloc>()),
       ],

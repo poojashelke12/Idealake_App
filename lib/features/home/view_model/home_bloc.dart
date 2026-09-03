@@ -8,6 +8,7 @@ import 'home_state.dart';
 /// ViewModel (BLoC) for managing Home Screen state and Sitefinity API data
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final HomeRepository _repository;
+  HomeRepository get repository => _repository;
 
   HomeBloc(this._repository) : super(const HomeState()) {
     on<HomeFetchDataEvent>(_onFetchData);

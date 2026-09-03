@@ -1,9 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../core/constants/api_endpoints.dart';
 import '../../../core/network/base_api_service.dart';
-import '../../../core/network/odata_query_builder.dart';
 import '../models/idealake_content_model.dart';
 import '../models/idealake_image_model.dart';
 import '../models/service_item_model.dart';
@@ -13,6 +11,7 @@ import '../models/sitefinity_module_model.dart';
 class HomeRepository {
   final BaseApiService _apiService;
   final SharedPreferences _prefs;
+  BaseApiService get apiService => _apiService;
 
   static const String _bannersCacheKey = 'cached_home_banners_v3';
   static const String _clientsCacheKey = 'cached_client_logos_v3';
@@ -77,26 +76,6 @@ class HomeRepository {
   /// 6. Fetch Dynamic Layout Modules (API removed - dummy data mode)
   Future<List<SitefinityModuleModel>> fetchModules() async {
     return _getFallbackModules();
-  }
-
-  String _mapIconForTitle(String title) {
-    final lower = title.toLowerCase();
-    if (lower.contains('app') || lower.contains('mobile') || lower.contains('flutter')) {
-      return 'devices_rounded';
-    } else if (lower.contains('web') || lower.contains('portal') || lower.contains('sitefinity')) {
-      return 'web_rounded';
-    } else if (lower.contains('fintech') || lower.contains('lending') || lower.contains('loan')) {
-      return 'account_balance_wallet_rounded';
-    } else if (lower.contains('cloud') || lower.contains('devops') || lower.contains('azure')) {
-      return 'cloud_done_rounded';
-    } else if (lower.contains('design') || lower.contains('ui') || lower.contains('ux')) {
-      return 'brush_rounded';
-    }
-    return 'api_rounded';
-  }
-
-  Future<void> _cacheData(String key, List<Map<String, dynamic>> items) async {
-    await _prefs.setString(key, jsonEncode(items));
   }
 
   List<IdealakeImageModel> _loadSavedBanners() {

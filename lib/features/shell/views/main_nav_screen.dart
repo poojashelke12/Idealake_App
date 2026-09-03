@@ -4,25 +4,22 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/di/service_locator.dart';
-import '../../../core/routes/app_routes.dart';
+import '../../../core/routes/app_routes.dart';  
 import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/ui_helpers.dart';
 import '../../../core/widgets/custom_button.dart';
-import '../../announcements/view_model/announcements_bloc.dart';
-import '../../announcements/view_model/announcements_state.dart';
-import '../../announcements/views/announcements_screen.dart';
 import '../../auth/models/user_model.dart';
 import '../../auth/repository/auth_repository.dart';
 import '../../auth/view_model/auth_bloc.dart';
 import '../../auth/view_model/auth_event.dart';
 import '../../auth/view_model/auth_state.dart';
+import '../../career/views/career_screen.dart';
 import '../../documents/views/documents_screen.dart';
 import '../../home/views/home_screen.dart';
 import '../../news/views/news_list_screen.dart';
-import '../../policies/views/policies_screen.dart';
 import '../widgets/cms_demo_dialog.dart';
 
-/// Main Shell Screen managing the 5 Dynamic Tabs
+/// Main Shell Screen managing the 4 Tabs: Home, News, Career, Documents
 class MainNavScreen extends StatefulWidget {
   const MainNavScreen({super.key});
 
@@ -36,15 +33,15 @@ class _MainNavScreenState extends State<MainNavScreen> {
   final List<Widget> _screens = const [
     HomeScreen(),
     NewsListScreen(),
-    PoliciesScreen(),
+    CareerScreen(),
     DocumentsScreen(),
   ];
 
   final List<String> _titles = [
     'Dashboard',
-    'Content Management',
-    'Analytics & Insights',
-    'Administration & System',
+    'News & Articles',
+    'Careers at Idealake',
+    'Document Library',
   ];
 
   @override
@@ -105,6 +102,12 @@ class _MainNavScreenState extends State<MainNavScreen> {
     return AppBar(
       elevation: 0,
       backgroundColor: AppColors.surface,
+      leading: Builder(
+        builder: (context) => IconButton(
+          icon: const Icon(Icons.menu_rounded, color: Color(0xFF111827)),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
+      ),
       title: Row(
         children: [
           Container(
@@ -170,14 +173,14 @@ class _MainNavScreenState extends State<MainNavScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(20),
-              color: const Color(0xFF0D3C89),
+              color: const Color(0xFF003D99),
               width: double.infinity,
               child: Row(
                 children: [
                   const CircleAvatar(
                     radius: 24,
                     backgroundColor: Colors.white,
-                    child: Icon(Icons.person, color: Color(0xFF0D3C89), size: 28),
+                    child: Icon(Icons.person, color: Color(0xFF003D99), size: 28),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -185,7 +188,7 @@ class _MainNavScreenState extends State<MainNavScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'Dashboard Portal',
+                          'Idealake Portal',
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -211,7 +214,7 @@ class _MainNavScreenState extends State<MainNavScreen> {
                 children: [
                   ListTile(
                     leading: const Icon(Icons.grid_view_rounded, color: Color(0xFF003D99)),
-                    title: const Text('Dashboard', style: TextStyle(fontWeight: FontWeight.bold)),
+                    title: const Text('Home', style: TextStyle(fontWeight: FontWeight.bold)),
                     selected: _currentIndex == 0,
                     onTap: () {
                       Navigator.pop(context);
@@ -219,8 +222,8 @@ class _MainNavScreenState extends State<MainNavScreen> {
                     },
                   ),
                   ListTile(
-                    leading: const Icon(Icons.description_outlined),
-                    title: const Text('Content'),
+                    leading: const Icon(Icons.newspaper_outlined),
+                    title: const Text('News'),
                     selected: _currentIndex == 1,
                     onTap: () {
                       Navigator.pop(context);
@@ -228,8 +231,8 @@ class _MainNavScreenState extends State<MainNavScreen> {
                     },
                   ),
                   ListTile(
-                    leading: const Icon(Icons.insights_rounded),
-                    title: const Text('Analytics'),
+                    leading: const Icon(Icons.work_outline_rounded),
+                    title: const Text('Career'),
                     selected: _currentIndex == 2,
                     onTap: () {
                       Navigator.pop(context);
@@ -237,24 +240,12 @@ class _MainNavScreenState extends State<MainNavScreen> {
                     },
                   ),
                   ListTile(
-                    leading: const Icon(Icons.settings_outlined),
-                    title: const Text('Admin'),
+                    leading: const Icon(Icons.folder_open_outlined),
+                    title: const Text('Documents'),
                     selected: _currentIndex == 3,
                     onTap: () {
                       Navigator.pop(context);
                       setState(() => _currentIndex = 3);
-                    },
-                  ),
-                  const Divider(),
-                  ListTile(
-                    leading: const Icon(Icons.campaign_outlined),
-                    title: const Text('Announcements Feed'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const AnnouncementsScreen()),
-                      );
                     },
                   ),
                   const Divider(),
@@ -394,7 +385,10 @@ class _MainNavScreenState extends State<MainNavScreen> {
                   buttonType: ButtonType.outlined,
                   prefixIcon: const Icon(Icons.logout_rounded, color: AppColors.error, size: 18),
                   textColor: AppColors.error,
-                  onPressed: () => _handleLogout(context),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _showLogoutConfirmationDialog(context);
+                  },
                 ),
               ],
             );
@@ -404,61 +398,49 @@ class _MainNavScreenState extends State<MainNavScreen> {
     );
   }
 
-  Future<void> _handleLogout(BuildContext context) async {
-    // 1. Dispatch AuthLogoutRequested to trigger BLoC state reset
-    context.read<AuthBloc>().add(AuthLogoutRequested());
-
-    // 2. Explicitly wipe all tokens and session data from SharedPreferences
-    await locator<AuthRepository>().clearToken();
-
-    // 3. Clear entire navigation history and navigate directly to Login
-    if (context.mounted) {
-      Navigator.of(context, rootNavigator: true).pushNamedAndRemoveUntil(
-        AppRoutes.login,
-        (route) => false,
-      );
-    }
-  }
-
   void _showLogoutConfirmationDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (dialogCtx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
-        ),
-        title: Row(
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
           children: [
-            const Icon(Icons.logout_rounded, color: AppColors.error),
-            const SizedBox(width: 8),
-            Text(
-              'Sign Out',
-              style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
-            ),
+            Icon(Icons.logout_rounded, color: AppColors.error, size: 24),
+            SizedBox(width: 10),
+            Text('Sign Out', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           ],
         ),
-        content: Text(
-          'Are you sure you want to sign out? Your authentication token and session will be cleared.',
-          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+        content: const Text(
+          'Are you sure you want to sign out? Your authentication token and local session data will be completely cleared.',
+          style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(dialogCtx),
-            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
             onPressed: () {
-              Navigator.pop(dialogCtx);
+              Navigator.pop(dialogContext);
               _handleLogout(context);
             },
-            child: const Text('Sign Out'),
+            child: const Text('Sign Out', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
+    );
+  }
+
+  void _handleLogout(BuildContext context) {
+    context.read<AuthBloc>().add(AuthLogoutRequested());
+    Navigator.of(context, rootNavigator: true).pushNamedAndRemoveUntil(
+      AppRoutes.login,
+      (route) => false,
     );
   }
 
@@ -485,19 +467,19 @@ class _MainNavScreenState extends State<MainNavScreen> {
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.description_outlined, color: Color(0xFF4B5563)),
-            selectedIcon: Icon(Icons.description_rounded, color: Colors.white),
-            label: 'Content',
+            icon: Icon(Icons.newspaper_outlined, color: Color(0xFF4B5563)),
+            selectedIcon: Icon(Icons.newspaper_rounded, color: Colors.white),
+            label: 'News',
           ),
           NavigationDestination(
-            icon: Icon(Icons.insights_rounded, color: Color(0xFF4B5563)),
-            selectedIcon: Icon(Icons.insights_rounded, color: Colors.white),
-            label: 'Analytics',
+            icon: Icon(Icons.work_outline_rounded, color: Color(0xFF4B5563)),
+            selectedIcon: Icon(Icons.work_rounded, color: Colors.white),
+            label: 'Career',
           ),
           NavigationDestination(
-            icon: Icon(Icons.settings_outlined, color: Color(0xFF4B5563)),
-            selectedIcon: Icon(Icons.settings_rounded, color: Colors.white),
-            label: 'Admin',
+            icon: Icon(Icons.folder_open_outlined, color: Color(0xFF4B5563)),
+            selectedIcon: Icon(Icons.folder_rounded, color: Colors.white),
+            label: 'Documents',
           ),
         ],
       ),

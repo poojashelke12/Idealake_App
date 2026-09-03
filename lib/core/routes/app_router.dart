@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../features/auth/views/login_screen.dart';
+import '../../features/career/views/career_screen.dart';
 import '../../features/news/models/news_model.dart';
 import '../../features/news/views/news_detail_screen.dart';
-import '../../features/policies/models/policy_model.dart';
-import '../../features/policies/views/policy_viewer_screen.dart';
 import '../../features/shell/views/main_nav_screen.dart';
 import '../../features/splash/views/splash_screen.dart';
 import 'app_routes.dart';
@@ -40,10 +39,9 @@ class AppRouter {
           settings: settings,
         );
 
-      case AppRoutes.policyViewer:
-        final policy = settings.arguments as PolicyModel;
+      case AppRoutes.career:
         return MaterialPageRoute(
-          builder: (_) => PolicyViewerScreen(policy: policy),
+          builder: (_) => const CareerScreen(),
           settings: settings,
         );
 
