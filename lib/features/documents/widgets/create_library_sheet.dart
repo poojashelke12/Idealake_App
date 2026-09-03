@@ -5,13 +5,10 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/ui_helpers.dart';
-import '../../../core/utils/validators.dart';
-import '../../../core/widgets/custom_button.dart';
-import '../../../core/widgets/custom_text_field.dart';
 import '../view_model/documents_bloc.dart';
 import '../view_model/documents_event.dart';
 
-/// Modal sheet to create a new Document Library (matches Sitefinity Web Action)
+/// Modal sheet to create a new Document Library matching Sitefinity Web Admin UI (Screenshot 4)
 class CreateLibrarySheet extends StatefulWidget {
   const CreateLibrarySheet({super.key});
 
@@ -20,7 +17,10 @@ class CreateLibrarySheet extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const CreateLibrarySheet(),
+      builder: (_) => BlocProvider.value(
+        value: context.read<DocumentsBloc>(),
+        child: const CreateLibrarySheet(),
+      ),
     );
   }
 
@@ -31,28 +31,32 @@ class CreateLibrarySheet extends StatefulWidget {
 class _CreateLibrarySheetState extends State<CreateLibrarySheet> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  String _selectedStorage = 'Database';
+  String _selectedStorage = 'Database (default)';
+  int _hierarchyLevel = 0; // 0 = On top level, 1 = Under parent library
 
   @override
   void dispose() {
     _titleController.dispose();
-    _descriptionController.dispose();
     super.dispose();
   }
 
   void _handleSubmit() {
-    if (_formKey.currentState?.validate() ?? false) {
-      context.read<DocumentsBloc>().add(
-            DocumentsCreateLibraryEvent(
-              title: _titleController.text.trim(),
-              description: _descriptionController.text.trim(),
-              storedIn: _selectedStorage,
-            ),
-          );
-      Navigator.pop(context);
-      UIHelpers.showSuccessSnackBar(context, 'Created library "${_titleController.text.trim()}" in Sitefinity CMS!');
+    final title = _titleController.text.trim();
+    if (title.isEmpty) {
+      UIHelpers.showSnackBar(context, 'Please type a library name', isError: true);
+      return;
     }
+
+    final storageClean = _selectedStorage.replaceAll(' (default)', '');
+
+    context.read<DocumentsBloc>().add(
+          DocumentsCreateLibraryEvent(
+            title: title,
+            storedIn: storageClean,
+          ),
+        );
+    Navigator.pop(context);
+    UIHelpers.showSuccessSnackBar(context, 'Created library "$title" in Sitefinity CMS!');
   }
 
   @override
@@ -60,9 +64,9 @@ class _CreateLibrarySheetState extends State<CreateLibrarySheet> {
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
         decoration: const BoxDecoration(
-          color: AppColors.surface,
+          color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(AppConstants.radiusLarge)),
         ),
         child: Form(
@@ -71,72 +75,158 @@ class _CreateLibrarySheetState extends State<CreateLibrarySheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(color: AppColors.divider, borderRadius: BorderRadius.circular(2)),
+              // Close (✕) icon on the top right
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, size: 22, color: AppColors.textSecondary),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              // Large Title Input: "Type library name" (Screenshot 4)
+              TextField(
+                controller: _titleController,
+                autofocus: true,
+                style: AppTextStyles.headlineMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                  fontSize: 26,
+                ),
+                decoration: const InputDecoration(
+                  hintText: 'Type library name',
+                  hintStyle: TextStyle(
+                    color: Color(0xFFB0B0B0),
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(vertical: 4),
+                ),
+              ),
+              const Divider(color: Color(0xFFE2E8F0), thickness: 1),
+              const SizedBox(height: 20),
+
+              // Hierarchy radio options: "Put this library..." (Screenshot 4)
+              Text(
+                'Put this library...',
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 6),
+
+              InkWell(
+                onTap: () => setState(() => _hierarchyLevel = 0),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6.0),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 18,
+                        height: 18,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: _hierarchyLevel == 0 ? const Color(0xFF00965E) : AppColors.border,
+                            width: _hierarchyLevel == 0 ? 5 : 2,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text('On top level', style: AppTextStyles.bodyMedium),
+                    ],
+                  ),
+                ),
+              ),
+              InkWell(
+                onTap: () => setState(() => _hierarchyLevel = 1),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6.0),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 18,
+                        height: 18,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: _hierarchyLevel == 1 ? const Color(0xFF00965E) : AppColors.border,
+                            width: _hierarchyLevel == 1 ? 5 : 2,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text('Under parent library...', style: AppTextStyles.bodyMedium),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Storage Provider (Screenshot 4)
+              Row(
+                children: [
+                  Text(
+                    'Storage provider',
+                    style: AppTextStyles.labelMedium.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.help_outline_rounded, size: 14, color: AppColors.textTertiary),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.border),
+                  borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedStorage,
+                    isExpanded: true,
+                    items: const [
+                      DropdownMenuItem(value: 'Database (default)', child: Text('Database (default)')),
+                      DropdownMenuItem(value: 'Azure Blob', child: Text('Azure Blob Storage')),
+                      DropdownMenuItem(value: 'File System', child: Text('Local File System')),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) setState(() => _selectedStorage = val);
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 28),
+
+              // Green Create button matching Screenshot 4 (#00965E)
+              SizedBox(
+                height: 44,
+                width: 120,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF00965E), // Sitefinity green
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                    elevation: 0,
+                  ),
+                  onPressed: _handleSubmit,
+                  child: const Text(
+                    'Create',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.create_new_folder_rounded, color: AppColors.primary, size: 24),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Create a Library',
-                    style: AppTextStyles.headlineSmall.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              CustomTextField(
-                label: 'Library Name *',
-                hintText: 'e.g. ResumeDocument, KYC Records',
-                controller: _titleController,
-                validator: (v) => Validators.validateRequired(v, fieldName: 'Library name'),
-              ),
-              const SizedBox(height: 14),
-              CustomTextField(
-                label: 'Description',
-                hintText: 'Optional description of library contents',
-                controller: _descriptionController,
-                maxLines: 2,
-              ),
-              const SizedBox(height: 14),
-              Text(
-                'Storage Provider',
-                style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                initialValue: _selectedStorage,
-                items: const [
-                  DropdownMenuItem(value: 'Database', child: Text('Database (Default)')),
-                  DropdownMenuItem(value: 'Azure Blob', child: Text('Azure Blob Storage')),
-                  DropdownMenuItem(value: 'File System', child: Text('Local File System')),
-                ],
-                onChanged: (val) {
-                  if (val != null) setState(() => _selectedStorage = val);
-                },
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppConstants.radiusMedium)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                ),
-              ),
-              const SizedBox(height: 24),
-              CustomButton(
-                text: 'Create Library',
-                prefixIcon: const Icon(Icons.check_rounded, color: AppColors.textWhite, size: 18),
-                onPressed: _handleSubmit,
-              ),
             ],
           ),
         ),
