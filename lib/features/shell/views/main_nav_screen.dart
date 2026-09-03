@@ -6,6 +6,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../core/routes/app_routes.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../../core/utils/ui_helpers.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../announcements/view_model/announcements_bloc.dart';
 import '../../announcements/view_model/announcements_state.dart';
@@ -34,18 +35,16 @@ class _MainNavScreenState extends State<MainNavScreen> {
 
   final List<Widget> _screens = const [
     HomeScreen(),
-    AnnouncementsScreen(),
     NewsListScreen(),
     PoliciesScreen(),
     DocumentsScreen(),
   ];
 
   final List<String> _titles = [
-    'Digital Portal',
-    'Announcements Feed',
-    'News & Articles',
-    'Organizational Policies',
-    'Document Library',
+    'Dashboard',
+    'Content Management',
+    'Analytics & Insights',
+    'Administration & System',
   ];
 
   @override
@@ -53,6 +52,7 @@ class _MainNavScreenState extends State<MainNavScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: _buildAppBar(),
+      drawer: _buildDrawer(),
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
@@ -62,6 +62,46 @@ class _MainNavScreenState extends State<MainNavScreen> {
   }
 
   PreferredSizeWidget _buildAppBar() {
+    if (_currentIndex == 0) {
+      return AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu_rounded, color: Color(0xFF111827)),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+        title: const Text(
+          'Dashboard',
+          style: TextStyle(
+            color: Color(0xFF111827),
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        actions: [
+          IconButton(
+            tooltip: 'Notifications',
+            icon: const Icon(Icons.notifications_none_rounded, color: Color(0xFF003D99)),
+            onPressed: () {
+              UIHelpers.showSnackBar(context, 'No new system notifications.');
+            },
+          ),
+          IconButton(
+            tooltip: 'User Profile & Session',
+            icon: const CircleAvatar(
+              radius: 15,
+              backgroundColor: Color(0xFFE5E7EB),
+              child: Icon(Icons.person, color: Color(0xFF6B7280), size: 18),
+            ),
+            onPressed: () => _showProfileDialog(context),
+          ),
+          const SizedBox(width: 8),
+        ],
+      );
+    }
+
     return AppBar(
       elevation: 0,
       backgroundColor: AppColors.surface,
@@ -113,8 +153,133 @@ class _MainNavScreenState extends State<MainNavScreen> {
           ),
           onPressed: () => _showProfileDialog(context),
         ),
+        IconButton(
+          tooltip: 'Sign Out',
+          icon: const Icon(Icons.logout_rounded, color: AppColors.error),
+          onPressed: () => _showLogoutConfirmationDialog(context),
+        ),
         const SizedBox(width: 4),
       ],
+    );
+  }
+
+  Widget _buildDrawer() {
+    return Drawer(
+      child: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              color: const Color(0xFF0D3C89),
+              width: double.infinity,
+              child: Row(
+                children: [
+                  const CircleAvatar(
+                    radius: 24,
+                    backgroundColor: Colors.white,
+                    child: Icon(Icons.person, color: Color(0xFF0D3C89), size: 28),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Dashboard Portal',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        Text(
+                          'Sitefinity 14.1 CMS',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.grid_view_rounded, color: Color(0xFF003D99)),
+                    title: const Text('Dashboard', style: TextStyle(fontWeight: FontWeight.bold)),
+                    selected: _currentIndex == 0,
+                    onTap: () {
+                      Navigator.pop(context);
+                      setState(() => _currentIndex = 0);
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.description_outlined),
+                    title: const Text('Content'),
+                    selected: _currentIndex == 1,
+                    onTap: () {
+                      Navigator.pop(context);
+                      setState(() => _currentIndex = 1);
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.insights_rounded),
+                    title: const Text('Analytics'),
+                    selected: _currentIndex == 2,
+                    onTap: () {
+                      Navigator.pop(context);
+                      setState(() => _currentIndex = 2);
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.settings_outlined),
+                    title: const Text('Admin'),
+                    selected: _currentIndex == 3,
+                    onTap: () {
+                      Navigator.pop(context);
+                      setState(() => _currentIndex = 3);
+                    },
+                  ),
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(Icons.campaign_outlined),
+                    title: const Text('Announcements Feed'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const AnnouncementsScreen()),
+                      );
+                    },
+                  ),
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(Icons.tune_rounded, color: AppColors.primary),
+                    title: const Text('Sitefinity CMS Simulator'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      CmsDemoDialog.show(context);
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.logout_rounded, color: AppColors.error),
+                    title: const Text('Sign Out', style: TextStyle(color: AppColors.error)),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showLogoutConfirmationDialog(context);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -229,11 +394,7 @@ class _MainNavScreenState extends State<MainNavScreen> {
                   buttonType: ButtonType.outlined,
                   prefixIcon: const Icon(Icons.logout_rounded, color: AppColors.error, size: 18),
                   textColor: AppColors.error,
-                  onPressed: () {
-                    context.read<AuthBloc>().add(AuthLogoutRequested());
-                    Navigator.pop(context);
-                    Navigator.pushReplacementNamed(context, AppRoutes.login);
-                  },
+                  onPressed: () => _handleLogout(context),
                 ),
               ],
             );
@@ -243,69 +404,102 @@ class _MainNavScreenState extends State<MainNavScreen> {
     );
   }
 
+  Future<void> _handleLogout(BuildContext context) async {
+    // 1. Dispatch AuthLogoutRequested to trigger BLoC state reset
+    context.read<AuthBloc>().add(AuthLogoutRequested());
+
+    // 2. Explicitly wipe all tokens and session data from SharedPreferences
+    await locator<AuthRepository>().clearToken();
+
+    // 3. Clear entire navigation history and navigate directly to Login
+    if (context.mounted) {
+      Navigator.of(context, rootNavigator: true).pushNamedAndRemoveUntil(
+        AppRoutes.login,
+        (route) => false,
+      );
+    }
+  }
+
+  void _showLogoutConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+        ),
+        title: Row(
+          children: [
+            const Icon(Icons.logout_rounded, color: AppColors.error),
+            const SizedBox(width: 8),
+            Text(
+              'Sign Out',
+              style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to sign out? Your authentication token and session will be cleared.',
+          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(dialogCtx);
+              _handleLogout(context);
+            },
+            child: const Text('Sign Out'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBottomNav() {
     return Container(
       decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.divider, width: 1)),
+        color: Color(0xFFF9FAFB),
+        border: Border(top: BorderSide(color: Color(0xFFE5E7EB), width: 1)),
       ),
-      child: BlocBuilder<AnnouncementsBloc, AnnouncementsState>(
-        builder: (context, state) {
-          final unreadCount = state.unreadCount;
-
-          return NavigationBar(
-            elevation: 0,
-            backgroundColor: AppColors.surface,
-            indicatorColor: AppColors.primaryContainer,
-            selectedIndex: _currentIndex,
-            onDestinationSelected: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
-            destinations: [
-              const NavigationDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home_rounded, color: AppColors.primary),
-                label: 'Home',
-              ),
-              NavigationDestination(
-                icon: Badge(
-                  isLabelVisible: unreadCount > 0,
-                  label: Text(
-                    unreadCount.toString(),
-                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                  ),
-                  child: const Icon(Icons.campaign_outlined),
-                ),
-                selectedIcon: Badge(
-                  isLabelVisible: unreadCount > 0,
-                  label: Text(
-                    unreadCount.toString(),
-                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                  ),
-                  child: const Icon(Icons.campaign_rounded, color: AppColors.primary),
-                ),
-                label: 'Feed',
-              ),
-              const NavigationDestination(
-                icon: Icon(Icons.newspaper_outlined),
-                selectedIcon: Icon(Icons.newspaper_rounded, color: AppColors.primary),
-                label: 'News',
-              ),
-              const NavigationDestination(
-                icon: Icon(Icons.policy_outlined),
-                selectedIcon: Icon(Icons.policy_rounded, color: AppColors.primary),
-                label: 'Policies',
-              ),
-              const NavigationDestination(
-                icon: Icon(Icons.folder_open_outlined),
-                selectedIcon: Icon(Icons.folder_rounded, color: AppColors.primary),
-                label: 'Documents',
-              ),
-            ],
-          );
+      child: NavigationBar(
+        elevation: 0,
+        backgroundColor: const Color(0xFFF9FAFB),
+        indicatorColor: const Color(0xFF004FC7),
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
         },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.grid_view_outlined, color: Color(0xFF4B5563)),
+            selectedIcon: Icon(Icons.grid_view_rounded, color: Colors.white),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.description_outlined, color: Color(0xFF4B5563)),
+            selectedIcon: Icon(Icons.description_rounded, color: Colors.white),
+            label: 'Content',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.insights_rounded, color: Color(0xFF4B5563)),
+            selectedIcon: Icon(Icons.insights_rounded, color: Colors.white),
+            label: 'Analytics',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined, color: Color(0xFF4B5563)),
+            selectedIcon: Icon(Icons.settings_rounded, color: Colors.white),
+            label: 'Admin',
+          ),
+        ],
       ),
     );
   }

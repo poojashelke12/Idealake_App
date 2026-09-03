@@ -45,6 +45,8 @@ class _AuthInterceptor extends Interceptor {
     final token = _prefs.getString(AppConstants.keyAuthToken);
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
+    } else {
+      options.headers.remove('Authorization');
     }
     return handler.next(options);
   }

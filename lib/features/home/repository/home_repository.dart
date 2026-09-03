@@ -22,100 +22,19 @@ class HomeRepository {
 
   HomeRepository(this._apiService, this._prefs);
 
-  /// 1. Fetch Dynamic Banners from Sitefinity /api/idealake/images
+  /// 1. Fetch Dynamic Banners (API removed - dummy data mode)
   Future<List<IdealakeImageModel>> fetchHomeBanners() async {
-    try {
-      final response = await _apiService.getGetApiResponse(
-        ApiEndpoints.idealakeImages,
-      );
-
-      dynamic data = response;
-      if (data is String) {
-        try {
-          data = jsonDecode(data);
-        } catch (_) {}
-      }
-
-      if (data != null && (data['value'] is List || data['data'] is List || data is List)) {
-        final list = (data is List ? data : (data['value'] ?? data['data'])) as List;
-        final banners = list
-            .map((item) => IdealakeImageModel.fromJson(item as Map<String, dynamic>))
-            .where((item) => item.isBanner1920)
-            .toList();
-
-        if (banners.isNotEmpty) {
-          await _cacheData(_bannersCacheKey, banners.map((e) => e.toJson()).toList());
-          return banners;
-        }
-      }
-      return _loadSavedBanners();
-    } catch (_) {
-      return _loadSavedBanners();
-    }
+    return _loadSavedBanners();
   }
 
-  /// 2. Fetch Enterprise Client Logos from Sitefinity (ParentId eq 60bbc6c5-4757-4697-ab6b-003a78c54c0f)
+  /// 2. Fetch Enterprise Client Logos (API removed - dummy data mode)
   Future<List<IdealakeImageModel>> fetchClientLogos() async {
-    try {
-      final queryParams = ODataQueryBuilder()
-          .filter("ParentId eq ${ApiEndpoints.clientImagesParentId}")
-          .orderBy('PublicationDate', ascending: false)
-          .build();
-
-      final response = await _apiService.getGetApiResponse(
-        ApiEndpoints.idealakeImages,
-        queryParameters: queryParams,
-      );
-
-      if (response != null && (response['value'] is List || response['data'] is List)) {
-        final list = (response['value'] ?? response['data']) as List;
-        final images = list.map((e) => IdealakeImageModel.fromJson(e as Map<String, dynamic>)).toList();
-        if (images.isNotEmpty) {
-          await _cacheData(_clientsCacheKey, images.map((e) => e.toJson()).toList());
-          return images;
-        }
-      }
-      return _getCachedClients();
-    } catch (_) {
-      return _getCachedClients();
-    }
+    return _getCachedClients();
   }
 
-  /// 3. Fetch Award & Accreditation Images (ParentId eq d7e1016a-bcbb-4e04-bf78-4029b71d7d6a)
+  /// 3. Fetch Award & Accreditation Images (API removed - dummy data mode)
   Future<List<IdealakeImageModel>> fetchAwards() async {
-    try {
-      final queryParams = ODataQueryBuilder()
-          .filter("ParentId eq ${ApiEndpoints.awardImagesParentId}")
-          .orderBy('PublicationDate', ascending: true)
-          .build();
-
-      final response = await _apiService.getGetApiResponse(
-        ApiEndpoints.idealakeImages,
-        queryParameters: queryParams,
-      );
-
-      dynamic data = response;
-      if (data is String) {
-        try {
-          data = jsonDecode(data);
-        } catch (_) {}
-      }
-
-      if (data != null && (data['value'] is List || data['data'] is List || data is List)) {
-        final list = (data is List ? data : (data['value'] ?? data['data'])) as List;
-        final images = list
-            .map((e) => IdealakeImageModel.fromJson(e as Map<String, dynamic>))
-            .where((img) => img.url.isNotEmpty)
-            .toList();
-        if (images.isNotEmpty) {
-          await _cacheData(_awardsCacheKey, images.map((e) => e.toJson()).toList());
-          return images;
-        }
-      }
-      return _loadSavedAwards();
-    } catch (_) {
-      return _loadSavedAwards();
-    }
+    return _loadSavedAwards();
   }
 
   List<IdealakeImageModel> _loadSavedAwards() {
@@ -132,35 +51,9 @@ class HomeRepository {
     return [];
   }
 
-  /// 4. Fetch Dynamic Contents / Articles from Sitefinity /api/idealake/contents
+  /// 4. Fetch Dynamic Contents (API removed - dummy data mode)
   Future<List<IdealakeContentModel>> fetchContents() async {
-    try {
-      final response = await _apiService.getGetApiResponse(
-        ApiEndpoints.contents,
-      );
-
-      dynamic data = response;
-      if (data is String) {
-        try {
-          data = jsonDecode(data);
-        } catch (_) {}
-      }
-
-      if (data != null && (data['value'] is List || data['data'] is List || data is List)) {
-        final list = (data is List ? data : (data['value'] ?? data['data'])) as List;
-        final contents = list
-            .map((item) => IdealakeContentModel.fromJson(item as Map<String, dynamic>))
-            .toList();
-
-        if (contents.isNotEmpty) {
-          await _cacheData(_contentsCacheKey, contents.map((e) => e.toJson()).toList());
-          return contents;
-        }
-      }
-      return _loadSavedContents();
-    } catch (_) {
-      return _loadSavedContents();
-    }
+    return _loadSavedContents();
   }
 
   List<IdealakeContentModel> _loadSavedContents() {
@@ -176,56 +69,14 @@ class HomeRepository {
     return [];
   }
 
-  /// 5. Fetch Dynamic Services / Solutions from Sitefinity /contents
+  /// 5. Fetch Dynamic Services (API removed - dummy data mode)
   Future<List<ServiceItemModel>> fetchServices() async {
-    try {
-      final queryParams = {'\$expand': '*'};
-      final response = await _apiService.getGetApiResponse(
-        ApiEndpoints.contents,
-        queryParameters: queryParams,
-      );
-
-      if (response != null && (response['value'] is List || response['data'] is List)) {
-        final list = (response['value'] ?? response['data']) as List;
-        final services = list.map((item) {
-          final content = IdealakeContentModel.fromJson(item as Map<String, dynamic>);
-          return ServiceItemModel(
-            id: content.id,
-            title: content.title,
-            description: content.summary ?? 'Enterprise technology solutions developed by Idealake.',
-            category: content.category ?? 'Technology',
-            iconName: _mapIconForTitle(content.title),
-          );
-        }).toList();
-
-        if (services.isNotEmpty) {
-          await _cacheData(_servicesCacheKey, services.map((e) => e.toJson()).toList());
-          return services;
-        }
-      }
-      return _getCachedServices();
-    } catch (_) {
-      return _getCachedServices();
-    }
+    return _getCachedServices();
   }
 
-  /// 5. Fetch Dynamic Layout Modules from Sitefinity /modules
+  /// 6. Fetch Dynamic Layout Modules (API removed - dummy data mode)
   Future<List<SitefinityModuleModel>> fetchModules() async {
-    try {
-      final queryParams = {'\$expand': '*'};
-      final response = await _apiService.getGetApiResponse(
-        ApiEndpoints.modules,
-        queryParameters: queryParams,
-      );
-
-      if (response != null && (response['value'] is List || response['data'] is List)) {
-        final list = (response['value'] ?? response['data']) as List;
-        return list.map((e) => SitefinityModuleModel.fromJson(e as Map<String, dynamic>)).toList();
-      }
-      return _getFallbackModules();
-    } catch (_) {
-      return _getFallbackModules();
-    }
+    return _getFallbackModules();
   }
 
   String _mapIconForTitle(String title) {
