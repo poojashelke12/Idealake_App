@@ -29,4 +29,5 @@ class ApiEndpoints {
   static const String documentLibraries = '/api/idealake/document-libraries';
   static const String idealakeImages = '/api/idealake/images';
   static const String companyServices = '/api/idealake/contents';
+  static const String careers = '/api/idealake/careers';
 }

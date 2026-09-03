@@ -8,6 +8,7 @@ import 'core/routes/app_router.dart';
 import 'core/routes/app_routes.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/view_model/auth_bloc.dart';
+import 'features/career/view_model/career_bloc.dart';
 import 'features/documents/view_model/documents_bloc.dart';
 import 'features/home/view_model/home_bloc.dart';
 import 'features/news/view_model/news_bloc.dart';
@@ -38,6 +39,7 @@ class IdealakeApp extends StatelessWidget {
         BlocProvider<SplashBloc>(create: (_) => locator<SplashBloc>()),
         BlocProvider<HomeBloc>(create: (_) => locator<HomeBloc>()),
         BlocProvider<NewsBloc>(create: (_) => locator<NewsBloc>()),
+        BlocProvider<CareerBloc>(create: (_) => locator<CareerBloc>()),
         BlocProvider<DocumentsBloc>(create: (_) => locator<DocumentsBloc>()),
         BlocProvider<AuthBloc>(create: (_) => locator<AuthBloc>()),
       ],
