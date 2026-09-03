@@ -37,27 +37,15 @@ class IdealakeApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<SplashBloc>(
-          create: (_) => locator<SplashBloc>(),
-        ),
-        BlocProvider<HomeBloc>(
-          create: (_) => locator<HomeBloc>(),
-        ),
+        BlocProvider<SplashBloc>(create: (_) => locator<SplashBloc>()),
+        BlocProvider<HomeBloc>(create: (_) => locator<HomeBloc>()),
         BlocProvider<AnnouncementsBloc>(
           create: (_) => locator<AnnouncementsBloc>(),
         ),
-        BlocProvider<NewsBloc>(
-          create: (_) => locator<NewsBloc>(),
-        ),
-        BlocProvider<PoliciesBloc>(
-          create: (_) => locator<PoliciesBloc>(),
-        ),
-        BlocProvider<DocumentsBloc>(
-          create: (_) => locator<DocumentsBloc>(),
-        ),
-        BlocProvider<AuthBloc>(
-          create: (_) => locator<AuthBloc>(),
-        ),
+        BlocProvider<NewsBloc>(create: (_) => locator<NewsBloc>()),
+        BlocProvider<PoliciesBloc>(create: (_) => locator<PoliciesBloc>()),
+        BlocProvider<DocumentsBloc>(create: (_) => locator<DocumentsBloc>()),
+        BlocProvider<AuthBloc>(create: (_) => locator<AuthBloc>()),
       ],
       child: MaterialApp(
         title: AppStrings.appName,

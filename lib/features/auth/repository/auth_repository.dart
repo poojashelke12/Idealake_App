@@ -97,18 +97,33 @@ class AuthRepository {
     return token != null && token.trim().isNotEmpty;
   }
 
+  /// Retrieve active authentication token
+  String? getAuthToken() {
+    return _prefs.getString(AppConstants.keyAuthToken);
+  }
+
+  /// Explicitly clear all stored tokens and session data from local storage
+  Future<void> clearToken() async {
+    await _prefs.remove(AppConstants.keyAuthToken);
+    await _prefs.remove(AppConstants.keyRefreshToken);
+    await _prefs.remove(AppConstants.keyTokenType);
+    await _prefs.remove(AppConstants.keyExpiresIn);
+    await _prefs.remove(AppConstants.keyIsLoggedIn);
+    await _prefs.remove(AppConstants.keyUserData);
+  }
+
   /// Terminate session and clear stored tokens
   Future<void> logout() async {
+    // 1. Immediately wipe all local tokens and session data so the app is logged out instantly
+    await clearToken();
+
+    // 2. Best-effort call to backend logout endpoint with short timeout
     try {
-      await _apiService.getPostApiResponse(ApiEndpoints.logout, {});
+      await _apiService
+          .getPostApiResponse(ApiEndpoints.logout, {})
+          .timeout(const Duration(seconds: 2));
     } catch (_) {
-    } finally {
-      await _prefs.remove(AppConstants.keyAuthToken);
-      await _prefs.remove(AppConstants.keyRefreshToken);
-      await _prefs.remove(AppConstants.keyTokenType);
-      await _prefs.remove(AppConstants.keyExpiresIn);
-      await _prefs.remove(AppConstants.keyIsLoggedIn);
-      await _prefs.remove(AppConstants.keyUserData);
+      // Ignored: Local session is already cleared
     }
   }
 

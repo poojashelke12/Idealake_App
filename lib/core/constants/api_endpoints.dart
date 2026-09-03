@@ -23,15 +23,6 @@ class ApiEndpoints {
       '60bbc6c5-4757-4697-ab6b-003a78c54c0f';
   static const String awardImagesParentId =
       'd7e1016a-bcbb-4e04-bf78-4029b71d7d6a';
-  static const String filterWebsiteLogo = "contains(Title,'Website_logo')";
-  static const String filterServiceBanner = "contains(Title,'service-banner')";
-  static const String filterCareerBanner =
-      "contains(Title,'career background desktop')";
-  static const String filterPoweredByCenter =
-      "contains(Title,'powered by center Image')";
-  static const String filterTrailblazingWork =
-      "contains(Title,'Trailblazing_Work_Home_Image_2')";
-
 
   static const String policies = '/api/idealake/policies';
   static const String documents = '/api/idealake/documents';
