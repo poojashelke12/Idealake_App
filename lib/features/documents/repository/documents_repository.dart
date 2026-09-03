@@ -12,9 +12,9 @@ class DocumentsRepository {
   final BaseApiService _apiService;
   final SharedPreferences _prefs;
 
-  static const String _librariesCacheKey = 'cached_document_libraries_v2';
-  static const String _documentsCacheKey = 'cached_documents_v2';
-  static const String _downloadedIdsKey = 'downloaded_document_ids_v2';
+  static const String _librariesCacheKey = 'cached_document_libraries_v4';
+  static const String _documentsCacheKey = 'cached_documents_v4';
+  static const String _downloadedIdsKey = 'downloaded_document_ids_v4';
 
   DocumentsRepository(this._apiService, this._prefs);
 
@@ -101,7 +101,6 @@ class DocumentsRepository {
           }
         }
       } catch (_) {
-        // Fallback to cached documents or initial POC documents on network/auth error
         if (allDocs.isEmpty) {
           allDocs = _getCachedDocuments();
           if (allDocs.isEmpty) {
@@ -120,18 +119,16 @@ class DocumentsRepository {
       }
     }
 
-    // 3. Filter by libraryId if specified and matches any document
+    // 3. Filter strictly by libraryId / title
     var items = allDocs.where((doc) {
-      if (libraryId.isEmpty || libraryId == 'all' || libraryId == 'lib-001' || libraryId == 'lib-002') {
-        return doc.libraryId == libraryId || doc.libraryId.isEmpty || doc.libraryId == 'lib-001';
+      if (libraryId == 'lib-002' || libraryId.toLowerCase().contains('default')) {
+        return doc.libraryId == 'lib-002' || doc.libraryTitle.toLowerCase() == 'default library';
+      }
+      if (libraryId == 'lib-001' || libraryId.toLowerCase().contains('resume')) {
+        return doc.libraryId == 'lib-001' || doc.libraryTitle.toLowerCase().contains('resume') || doc.libraryId.isEmpty;
       }
       return doc.libraryId == libraryId;
     }).toList();
-
-    // If no items matched the specific local ID, present all dynamic documents from API
-    if (items.isEmpty && allDocs.isNotEmpty) {
-      items = List.from(allDocs);
-    }
 
     // 4. Attach offline downloaded state
     final downloadedIds = _getDownloadedIds();
@@ -230,7 +227,7 @@ class DocumentsRepository {
     }
   }
 
-  /// Initial Seed Libraries strictly matching user's Sitefinity Web Screenshot
+  /// Initial Seed Libraries strictly matching website screenshot: exactly 2 libraries
   List<DocumentLibraryModel> _getInitialPocLibraries() {
     return [
       DocumentLibraryModel(
@@ -249,128 +246,52 @@ class DocumentsRepository {
         storedIn: 'Database',
         description: 'Default Sitefinity media storage container for uncategorized assets.',
       ),
-      DocumentLibraryModel(
-        id: 'lib-003',
-        title: 'Financial & Annual Reports',
-        documentCount: 12,
-        storedIn: 'Database',
-        lastUploadedDate: DateTime(2026, 2, 20, 10, 15),
-        lastUploadedBy: 'Finance Team',
-        description: 'Audited statutory balance sheets, investor decks, and compliance filings.',
-      ),
-      DocumentLibraryModel(
-        id: 'lib-004',
-        title: 'Corporate & HR Policies',
-        documentCount: 8,
-        storedIn: 'Azure Blob',
-        lastUploadedDate: DateTime(2026, 1, 15, 11, 0),
-        lastUploadedBy: 'HR Operations',
-        description: 'Employee manuals, benefits handbooks, and code of conduct documentation.',
-      ),
     ];
   }
 
+  /// Seed Documents strictly matching screenshots 2 & 3 (45 documents in ResumeDocument, 0 in Default Library)
   List<DocumentModel> _getInitialPocDocuments() {
-    return [
-      // In ResumeDocument (lib-001)
-      DocumentModel(
-        id: 'doc-101',
-        libraryId: 'lib-001',
-        libraryTitle: 'ResumeDocument',
-        title: 'Senior_Flutter_Engineer_Rakesh_Sunar.pdf',
-        description: 'Senior Mobile Application Architect specializing in Flutter, BLoC, and Headless CMS.',
-        fileExtension: 'pdf',
-        category: 'Engineering',
-        fileSize: '1.8 MB',
-        downloadUrl: 'https://cms.idealake.com/docs/resume-flutter-rakesh.pdf',
-        updatedDate: DateTime(2023, 9, 18, 14, 30),
-        uploadedBy: 'Rakesh Sunar',
-        isDownloaded: true,
-      ),
-      DocumentModel(
-        id: 'doc-102',
-        libraryId: 'lib-001',
-        libraryTitle: 'ResumeDocument',
-        title: 'Enterprise_Technical_Lead_Profile.docx',
-        description: 'Technical Lead profile with 10+ years experience in Sitefinity & ASP.NET backend integration.',
-        fileExtension: 'docx',
-        category: 'Architecture',
-        fileSize: '950 KB',
-        downloadUrl: 'https://cms.idealake.com/docs/tech-lead-profile.docx',
-        updatedDate: DateTime(2023, 9, 18, 12, 10),
-        uploadedBy: 'Rakesh Sunar',
-        isDownloaded: true,
-      ),
-      DocumentModel(
-        id: 'doc-103',
-        libraryId: 'lib-001',
-        libraryTitle: 'ResumeDocument',
-        title: 'UI_UX_Product_Designer_Portfolio.pdf',
-        description: 'Fintech and enterprise design system lead showcase portfolio.',
-        fileExtension: 'pdf',
-        category: 'Design',
-        fileSize: '4.2 MB',
-        downloadUrl: 'https://cms.idealake.com/docs/ui-ux-designer.pdf',
-        updatedDate: DateTime(2023, 9, 17, 16, 45),
-        uploadedBy: 'Rakesh Sunar',
-      ),
-      DocumentModel(
-        id: 'doc-104',
-        libraryId: 'lib-001',
-        libraryTitle: 'ResumeDocument',
-        title: 'Cloud_DevOps_Specialist_Evaluation.xlsx',
-        description: 'Technical evaluation scorecard for Kubernetes, Azure App Service, and CI/CD pipelines.',
-        fileExtension: 'xlsx',
-        category: 'DevOps',
-        fileSize: '420 KB',
-        downloadUrl: 'https://cms.idealake.com/docs/devops-scorecard.xlsx',
-        updatedDate: DateTime(2023, 9, 16, 11, 20),
-        uploadedBy: 'Rakesh Sunar',
-      ),
+    final List<DocumentModel> docs = [];
 
-      // In Financial & Annual Reports (lib-003)
-      DocumentModel(
-        id: 'doc-301',
-        libraryId: 'lib-003',
-        libraryTitle: 'Financial & Annual Reports',
-        title: 'LTFS_Annual_Report_2025_2026.pdf',
-        description: 'Full audited statutory balance sheet, auditor declarations, and shareholder presentation.',
-        fileExtension: 'pdf',
-        category: 'Financial',
-        fileSize: '5.2 MB',
-        downloadUrl: 'https://cms.idealake.com/docs/ltfs-annual-report-2026.pdf',
-        updatedDate: DateTime(2026, 2, 20, 10, 15),
-        uploadedBy: 'Finance Team',
-        isDownloaded: true,
-      ),
-      DocumentModel(
-        id: 'doc-302',
-        libraryId: 'lib-003',
-        libraryTitle: 'Financial & Annual Reports',
-        title: 'Q3_Digital_Originations_Revenue_Breakdown.xlsx',
-        description: 'Quarterly breakdown of digital loan disbursements across mobile and web channels.',
-        fileExtension: 'xlsx',
-        category: 'Financial',
-        fileSize: '1.1 MB',
-        downloadUrl: 'https://cms.idealake.com/docs/q3-originations.xlsx',
-        updatedDate: DateTime(2026, 2, 14, 09, 30),
-        uploadedBy: 'Finance Team',
-      ),
-
-      // In Corporate & HR Policies (lib-004)
-      DocumentModel(
-        id: 'doc-401',
-        libraryId: 'lib-004',
-        libraryTitle: 'Corporate & HR Policies',
-        title: 'Employee_Medical_Benefits_and_Insurance_Manual.docx',
-        description: 'Health insurance policies, family coverage terms, and cashless hospitalization procedure.',
-        fileExtension: 'docx',
-        category: 'Human Resources',
-        fileSize: '1.4 MB',
-        downloadUrl: 'https://cms.idealake.com/docs/medical-benefits.docx',
-        updatedDate: DateTime(2026, 1, 15, 11, 0),
-        uploadedBy: 'HR Operations',
-      ),
+    final dates = [
+      DateTime(2023, 8, 11),
+      DateTime(2023, 8, 17),
+      DateTime(2023, 8, 17),
+      DateTime(2023, 8, 17),
+      DateTime(2023, 8, 17),
+      DateTime(2023, 8, 17),
+      DateTime(2023, 8, 18),
+      DateTime(2023, 8, 18),
+      DateTime(2023, 8, 20),
+      DateTime(2023, 8, 22),
+      DateTime(2023, 8, 25),
+      DateTime(2023, 9, 1),
+      DateTime(2023, 9, 5),
+      DateTime(2023, 9, 10),
+      DateTime(2023, 9, 18),
     ];
+
+    // Generate 45 items for ResumeDocument matching Screenshot 2 (ts-Support Engineer)
+    for (int i = 1; i <= 45; i++) {
+      final date = dates[(i - 1) % dates.length];
+      docs.add(
+        DocumentModel(
+          id: 'doc-$i',
+          libraryId: 'lib-001',
+          libraryTitle: 'ResumeDocument',
+          title: 'ts-Support Engineer',
+          description: 'Technical Support Engineer candidate profile and evaluation resume document.',
+          fileExtension: 'doc',
+          category: 'Engineering',
+          fileSize: '45 KB',
+          downloadUrl: 'https://sitefinityheadlesscmsapi.idealake.com/docs/ts-support-engineer.doc',
+          updatedDate: date,
+          uploadedBy: 'Rakesh Sunar',
+          isDownloaded: i <= 2,
+        ),
+      );
+    }
+
+    return docs;
   }
 }
