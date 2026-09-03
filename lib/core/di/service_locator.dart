@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/auth/repository/auth_repository.dart';
 import '../../features/auth/view_model/auth_bloc.dart';
+import '../../features/career/repository/career_repository.dart';
+import '../../features/career/view_model/career_bloc.dart';
 import '../../features/documents/repository/documents_repository.dart';
 import '../../features/documents/view_model/documents_bloc.dart';
 import '../../features/home/repository/home_repository.dart';
@@ -30,6 +32,9 @@ Future<void> setupServiceLocator() async {
   locator.registerLazySingleton<NewsRepository>(
     () => NewsRepository(locator<BaseApiService>(), locator<SharedPreferences>()),
   );
+  locator.registerLazySingleton<CareerRepository>(
+    () => CareerRepository(locator<BaseApiService>(), locator<SharedPreferences>()),
+  );
   locator.registerLazySingleton<DocumentsRepository>(
     () => DocumentsRepository(locator<BaseApiService>(), locator<SharedPreferences>()),
   );
@@ -43,6 +48,7 @@ Future<void> setupServiceLocator() async {
   // 4. ViewModels / BLoCs (ViewModel Layer)
   locator.registerFactory<SplashBloc>(() => SplashBloc(locator<SharedPreferences>()));
   locator.registerFactory<NewsBloc>(() => NewsBloc(locator<NewsRepository>()));
+  locator.registerFactory<CareerBloc>(() => CareerBloc(locator<CareerRepository>()));
   locator.registerFactory<DocumentsBloc>(() => DocumentsBloc(locator<DocumentsRepository>()));
   locator.registerFactory<HomeBloc>(() => HomeBloc(locator<HomeRepository>()));
   locator.registerFactory<AuthBloc>(() => AuthBloc(locator<AuthRepository>()));
