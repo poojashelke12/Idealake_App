@@ -3,7 +3,7 @@ class AppStrings {
   AppStrings._();
 
   // General App
-  static const String appName = 'Idealake - LTFS';
+  static const String appName = 'Intranet Portal';
   static const String companyName = 'Idealake Information Technology';
   static const String tagline = 'Transforming Digital Experiences';
 

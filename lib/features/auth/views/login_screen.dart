@@ -201,7 +201,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   // Title & Subtitle
                   Text(
-                    'Welcome to\nIdealake • LTFS Portal',
+                    'Welcome to\nIntranet Portal',
                     style: AppTextStyles.headlineMedium.copyWith(
                       fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary,
