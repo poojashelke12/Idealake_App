@@ -206,45 +206,9 @@ class _NewsListScreenState extends State<NewsListScreen> {
 
               // Multi-Selection Toolbar Banner (Screenshots 4 & 5)
               if (_selectedItemIds.isNotEmpty)
-                _buildSelectionBanner(context, newsList)
-              else
-                // Standard Column Header row (TITLE / LAST MODIFIED / ACTIONS)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 6.0),
-                  child: Row(
-                    children: [
-                      Text(
-                        'TITLE',
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.textTertiary,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.8,
-                          fontSize: 10,
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        'LAST MODIFIED',
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.textTertiary,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.8,
-                          fontSize: 10,
-                        ),
-                      ),
-                      const SizedBox(width: 28),
-                      Text(
-                        'ACTIONS',
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.textTertiary,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.8,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                _buildSelectionBanner(context, newsList),
+
+              const SizedBox(height: 4),
 
               // Dynamic List of News Items
               Expanded(

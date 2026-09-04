@@ -298,35 +298,9 @@ class _LibraryFilesScreenState extends State<LibraryFilesScreen> {
 
               // Multi-Selection Toolbar Banner
               if (_selectedDocIds.isNotEmpty)
-                _buildSelectionBanner(context, files)
-              else if (files.isNotEmpty)
-                // Column Header row matching Screenshot 2 (TITLE / STATUS / ACTIONS)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
-                  child: Row(
-                    children: [
-                      Text(
-                        'TITLE / STATUS',
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.textTertiary,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.8,
-                          fontSize: 10,
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        'ACTIONS',
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.textTertiary,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.8,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                _buildSelectionBanner(context, files),
+
+              const SizedBox(height: 4),
 
               // Dynamic List of Documents or Empty View
               Expanded(
