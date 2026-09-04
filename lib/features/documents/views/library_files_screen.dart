@@ -155,81 +155,87 @@ class _LibraryFilesScreenState extends State<LibraryFilesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: BlocBuilder<DocumentsBloc, DocumentsState>(
-        builder: (context, state) {
-          final files = state.filesResponse.data ?? [];
+      body: SafeArea(
+        bottom: false,
+        child: BlocBuilder<DocumentsBloc, DocumentsState>(
+          builder: (context, state) {
+            final files = state.filesResponse.data ?? [];
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Offline banner
-              OfflineBanner(
-                isOffline: state.isOffline,
-                onRefresh: () {
-                  context.read<DocumentsBloc>().add(
-                        DocumentsFetchFilesInLibraryEvent(widget.library, forceRefresh: true),
-                      );
-                },
-              ),
-
-              // Header Row 1: Back/Breadcrumb navigation + Action Icons
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16.0, 10.0, 8.0, 4.0),
-                child: Row(
-                  children: [
-                    InkWell(
-                      onTap: () => Navigator.pop(context),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: Color(0xFF003D99)),
-                          const SizedBox(width: 6),
-                          Text(
-                            'All documents',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: const Color(0xFF003D99),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    const Icon(Icons.chevron_right, size: 16, color: AppColors.textTertiary),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        widget.library.title,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-
-                    // Filter icon (Screenshot 3)
-                    IconButton(
-                      icon: const Icon(Icons.filter_alt_outlined, color: AppColors.textSecondary, size: 20),
-                      tooltip: 'Filter documents',
-                      onPressed: () => DocumentsFilterSheet.show(
-                        context,
-                        documents: files,
-                      ),
-                    ),
-
-                    // Settings icon (Screenshot 2)
-                    IconButton(
-                      icon: const Icon(Icons.settings_outlined, color: AppColors.textSecondary, size: 20),
-                      tooltip: 'Settings for documents',
-                      onPressed: () => DocumentsSettingsSheet.show(context),
-                    ),
-                  ],
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Offline banner
+                OfflineBanner(
+                  isOffline: state.isOffline,
+                  onRefresh: () {
+                    context.read<DocumentsBloc>().add(
+                          DocumentsFetchFilesInLibraryEvent(widget.library, forceRefresh: true),
+                        );
+                  },
                 ),
-              ),
+
+                // Header Row 1: Back/Breadcrumb navigation + Action Icons (Padded below status bar)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16.0, 10.0, 8.0, 6.0),
+                  child: Row(
+                    children: [
+                      InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () => Navigator.pop(context),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: Color(0xFF003D99)),
+                              const SizedBox(width: 6),
+                              Text(
+                                'All documents',
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: const Color(0xFF003D99),
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.chevron_right, size: 16, color: AppColors.textTertiary),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          widget.library.title,
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+
+                      // Filter icon (Screenshot 3)
+                      IconButton(
+                        icon: const Icon(Icons.filter_alt_outlined, color: AppColors.textSecondary, size: 20),
+                        tooltip: 'Filter documents',
+                        onPressed: () => DocumentsFilterSheet.show(
+                          context,
+                          documents: files,
+                        ),
+                      ),
+
+                      // Settings icon (Screenshot 2)
+                      IconButton(
+                        icon: const Icon(Icons.settings_outlined, color: AppColors.textSecondary, size: 20),
+                        tooltip: 'Settings for documents',
+                        onPressed: () => DocumentsSettingsSheet.show(context),
+                      ),
+                    ],
+                  ),
+                ),
 
               // Header Row 2: Action buttons (Create a library & Upload documents)
               Padding(
@@ -321,8 +327,9 @@ class _LibraryFilesScreenState extends State<LibraryFilesScreen> {
           );
         },
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildSelectionBanner(BuildContext context, List<DocumentModel> files) {
     final allSelected = files.isNotEmpty && _selectedDocIds.length == files.length;
@@ -555,59 +562,64 @@ class _LibraryFilesScreenState extends State<LibraryFilesScreen> {
   Widget _buildSitefinityFooter(int count) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       decoration: const BoxDecoration(
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.divider)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Sitefinity CMS 14.1 | Headless API',
-                style: AppTextStyles.labelSmall.copyWith(color: AppColors.textTertiary, fontSize: 11),
-              ),
-              Text(
-                '$count ${count == 1 ? "document" : "documents"}',
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildFooterLink('Documentation'),
-                  const SizedBox(width: 8),
-                  _buildFooterLink('Resources'),
-                  const SizedBox(width: 8),
-                  _buildFooterLink("What's new"),
-                  const SizedBox(width: 8),
-                  _buildFooterLink('Feedback'),
+                  Text(
+                    'Sitefinity CMS 14.1 | Headless API',
+                    style: AppTextStyles.labelSmall.copyWith(color: AppColors.textTertiary, fontSize: 11),
+                  ),
+                  Text(
+                    '$count ${count == 1 ? "document" : "documents"}',
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
-              Container(
-                width: 18,
-                height: 18,
-                decoration: const BoxDecoration(
-                  color: AppColors.divider,
-                  shape: BoxShape.circle,
-                ),
-                child: const Center(
-                  child: Text('?', style: TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
-                ),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      _buildFooterLink('Documentation'),
+                      const SizedBox(width: 8),
+                      _buildFooterLink('Resources'),
+                      const SizedBox(width: 8),
+                      _buildFooterLink("What's new"),
+                      const SizedBox(width: 8),
+                      _buildFooterLink('Feedback'),
+                    ],
+                  ),
+                  Container(
+                    width: 18,
+                    height: 18,
+                    decoration: const BoxDecoration(
+                      color: AppColors.divider,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
+                      child: Text('?', style: TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
