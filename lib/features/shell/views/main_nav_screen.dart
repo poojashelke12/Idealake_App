@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/di/service_locator.dart';
-import '../../../core/routes/app_routes.dart';  
+import '../../../core/routes/app_routes.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/ui_helpers.dart';
 import '../../../core/widgets/custom_button.dart';
@@ -50,10 +50,7 @@ class _MainNavScreenState extends State<MainNavScreen> {
       backgroundColor: AppColors.background,
       appBar: _buildAppBar(),
       drawer: _buildDrawer(),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: _buildBottomNav(),
     );
   }
@@ -62,6 +59,8 @@ class _MainNavScreenState extends State<MainNavScreen> {
     if (_currentIndex == 0) {
       return AppBar(
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         backgroundColor: Colors.white,
         leading: Builder(
           builder: (context) => IconButton(
@@ -80,7 +79,10 @@ class _MainNavScreenState extends State<MainNavScreen> {
         actions: [
           IconButton(
             tooltip: 'Notifications',
-            icon: const Icon(Icons.notifications_none_rounded, color: Color(0xFF003D99)),
+            icon: const Icon(
+              Icons.notifications_none_rounded,
+              color: Color(0xFF003D99),
+            ),
             onPressed: () {
               UIHelpers.showSnackBar(context, 'No new system notifications.');
             },
@@ -101,7 +103,9 @@ class _MainNavScreenState extends State<MainNavScreen> {
 
     return AppBar(
       elevation: 0,
-      backgroundColor: AppColors.surface,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
+      backgroundColor: Colors.white,
       leading: Builder(
         builder: (context) => IconButton(
           icon: const Icon(Icons.menu_rounded, color: Color(0xFF111827)),
@@ -116,7 +120,11 @@ class _MainNavScreenState extends State<MainNavScreen> {
               color: AppColors.primaryContainer,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.hub_rounded, color: AppColors.primary, size: 20),
+            child: const Icon(
+              Icons.hub_rounded,
+              color: AppColors.primary,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 10),
           Column(
@@ -142,11 +150,6 @@ class _MainNavScreenState extends State<MainNavScreen> {
         ],
       ),
       actions: [
-        IconButton(
-          tooltip: 'Sitefinity CMS Simulator',
-          icon: const Icon(Icons.tune_rounded, color: AppColors.primary),
-          onPressed: () => CmsDemoDialog.show(context),
-        ),
         IconButton(
           tooltip: 'User Profile & Session',
           icon: const CircleAvatar(
@@ -180,7 +183,11 @@ class _MainNavScreenState extends State<MainNavScreen> {
                   const CircleAvatar(
                     radius: 24,
                     backgroundColor: Colors.white,
-                    child: Icon(Icons.person, color: Color(0xFF003D99), size: 28),
+                    child: Icon(
+                      Icons.person,
+                      color: Color(0xFF003D99),
+                      size: 28,
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -213,8 +220,14 @@ class _MainNavScreenState extends State<MainNavScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [
                   ListTile(
-                    leading: const Icon(Icons.grid_view_rounded, color: Color(0xFF003D99)),
-                    title: const Text('Home', style: TextStyle(fontWeight: FontWeight.bold)),
+                    leading: const Icon(
+                      Icons.grid_view_rounded,
+                      color: Color(0xFF003D99),
+                    ),
+                    title: const Text(
+                      'Home',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     selected: _currentIndex == 0,
                     onTap: () {
                       Navigator.pop(context);
@@ -250,7 +263,10 @@ class _MainNavScreenState extends State<MainNavScreen> {
                   ),
                   const Divider(),
                   ListTile(
-                    leading: const Icon(Icons.tune_rounded, color: AppColors.primary),
+                    leading: const Icon(
+                      Icons.tune_rounded,
+                      color: AppColors.primary,
+                    ),
                     title: const Text('Sitefinity CMS Simulator'),
                     onTap: () {
                       Navigator.pop(context);
@@ -258,8 +274,14 @@ class _MainNavScreenState extends State<MainNavScreen> {
                     },
                   ),
                   ListTile(
-                    leading: const Icon(Icons.logout_rounded, color: AppColors.error),
-                    title: const Text('Sign Out', style: TextStyle(color: AppColors.error)),
+                    leading: const Icon(
+                      Icons.logout_rounded,
+                      color: AppColors.error,
+                    ),
+                    title: const Text(
+                      'Sign Out',
+                      style: TextStyle(color: AppColors.error),
+                    ),
                     onTap: () {
                       Navigator.pop(context);
                       _showLogoutConfirmationDialog(context);
@@ -283,11 +305,14 @@ class _MainNavScreenState extends State<MainNavScreen> {
         padding: const EdgeInsets.all(24),
         decoration: const BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(AppConstants.radiusLarge)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppConstants.radiusLarge),
+          ),
         ),
         child: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, authState) {
-            final user = authState.currentUser ??
+            final user =
+                authState.currentUser ??
                 locator<AuthRepository>().getCurrentUser() ??
                 const UserModel(
                   id: 'usr-101',
@@ -305,7 +330,10 @@ class _MainNavScreenState extends State<MainNavScreen> {
                   child: Container(
                     width: 40,
                     height: 4,
-                    decoration: BoxDecoration(color: AppColors.divider, borderRadius: BorderRadius.circular(2)),
+                    decoration: BoxDecoration(
+                      color: AppColors.divider,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -315,7 +343,9 @@ class _MainNavScreenState extends State<MainNavScreen> {
                       radius: 28,
                       backgroundColor: AppColors.primaryContainer,
                       child: Text(
-                        user.fullName.isNotEmpty ? user.fullName[0].toUpperCase() : 'U',
+                        user.fullName.isNotEmpty
+                            ? user.fullName[0].toUpperCase()
+                            : 'U',
                         style: AppTextStyles.headlineSmall.copyWith(
                           color: AppColors.primary,
                           fontWeight: FontWeight.bold,
@@ -329,17 +359,26 @@ class _MainNavScreenState extends State<MainNavScreen> {
                         children: [
                           Text(
                             user.fullName,
-                            style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                            style: AppTextStyles.titleMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           Text(
                             user.email,
-                            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
-                              color: AppColors.secondary.withValues(alpha: 0.12),
+                              color: AppColors.secondary.withValues(
+                                alpha: 0.12,
+                              ),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
@@ -361,29 +400,57 @@ class _MainNavScreenState extends State<MainNavScreen> {
                 const SizedBox(height: 10),
                 Text(
                   'Active Session Details',
-                  style: AppTextStyles.labelSmall.copyWith(fontWeight: FontWeight.bold, color: AppColors.textTertiary),
+                  style: AppTextStyles.labelSmall.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textTertiary,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Department:', style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
-                    Text(user.department ?? 'LTFS Digital Architecture', style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w600)),
+                    Text(
+                      'Department:',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    Text(
+                      user.department ?? 'LTFS Digital Architecture',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 6),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Auth Provider:', style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
-                    Text('Sitefinity Headless JWT', style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w600, color: AppColors.primary)),
+                    Text(
+                      'Auth Provider:',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    Text(
+                      'Sitefinity Headless JWT',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 24),
                 CustomButton(
                   text: 'Sign Out Session',
                   buttonType: ButtonType.outlined,
-                  prefixIcon: const Icon(Icons.logout_rounded, color: AppColors.error, size: 18),
+                  prefixIcon: const Icon(
+                    Icons.logout_rounded,
+                    color: AppColors.error,
+                    size: 18,
+                  ),
                   textColor: AppColors.error,
                   onPressed: () {
                     Navigator.pop(context);
@@ -407,7 +474,10 @@ class _MainNavScreenState extends State<MainNavScreen> {
           children: [
             Icon(Icons.logout_rounded, color: AppColors.error, size: 24),
             SizedBox(width: 10),
-            Text('Sign Out', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            Text(
+              'Sign Out',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
           ],
         ),
         content: const Text(
@@ -417,19 +487,27 @@ class _MainNavScreenState extends State<MainNavScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             onPressed: () {
               Navigator.pop(dialogContext);
               _handleLogout(context);
             },
-            child: const Text('Sign Out', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Sign Out',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -438,10 +516,10 @@ class _MainNavScreenState extends State<MainNavScreen> {
 
   void _handleLogout(BuildContext context) {
     context.read<AuthBloc>().add(AuthLogoutRequested());
-    Navigator.of(context, rootNavigator: true).pushNamedAndRemoveUntil(
-      AppRoutes.login,
-      (route) => false,
-    );
+    Navigator.of(
+      context,
+      rootNavigator: true,
+    ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
   }
 
   Widget _buildBottomNav() {
