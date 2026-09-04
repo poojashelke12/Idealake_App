@@ -217,9 +217,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 28),
 
-                  // Email/Username Field
+                  // Email Field
                   CustomTextField(
-                    label: AppStrings.emailOrMobile,
+                    label: AppStrings.email,
                     hintText: 'e.g. user@idealake.com',
                     controller: _usernameController,
                     keyboardType: TextInputType.emailAddress,
@@ -230,7 +230,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     validator: (v) => Validators.validateRequired(
                       v,
-                      fieldName: 'Email / Username',
+                      fieldName: 'Email',
                     ),
                   ),
                   const SizedBox(height: 18),
@@ -289,7 +289,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
 
                   // Sign In Button
                   BlocBuilder<AuthBloc, AuthState>(
@@ -305,41 +305,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: _handleLogin,
                       );
                     },
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Enterprise SSO Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        UIHelpers.showSnackBar(
-                          context,
-                          'Enterprise Single Sign-On (SSO) redirect is managed by your IT portal. Please enter your credentials above to sign in.',
-                        );
-                      },
-                      icon: const Icon(
-                        Icons.domain_rounded,
-                        size: 18,
-                        color: AppColors.textPrimary,
-                      ),
-                      label: Text(
-                        'Continue with Enterprise SSO / AD',
-                        style: AppTextStyles.labelMedium.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppColors.border),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            AppConstants.radiusMedium,
-                          ),
-                        ),
-                      ),
-                    ),
                   ),
                   const SizedBox(height: 32),
 

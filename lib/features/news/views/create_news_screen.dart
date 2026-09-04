@@ -5,12 +5,13 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/ui_helpers.dart';
+import '../../../core/utils/validators.dart';
 import '../../../core/widgets/custom_text_field.dart';
 import '../models/news_model.dart';
 import '../view_model/news_bloc.dart';
 import '../view_model/news_event.dart';
 
-/// Screen for creating and publishing news articles matching Sitefinity Web Admin UI
+/// Screen for creating and editing news articles with responsive layouts and non-overlapping safe areas
 class CreateNewsScreen extends StatefulWidget {
   final NewsModel? initialNews;
 
@@ -38,7 +39,7 @@ class _CreateNewsScreenState extends State<CreateNewsScreen> {
 
   bool _categoriesExpanded = true;
   bool _additionalInfoExpanded = true;
-  bool _moreOptionsExpanded = true;
+  bool _moreOptionsExpanded = false;
 
   @override
   void initState() {
@@ -72,7 +73,7 @@ class _CreateNewsScreenState extends State<CreateNewsScreen> {
 
   void _saveNews({required bool isPublished}) {
     if (_titleController.text.trim().isEmpty) {
-      UIHelpers.showSnackBar(context, 'Please enter a title for the news item', isError: true);
+      UIHelpers.showSnackBar(context, 'Please enter a title for the news article', isError: true);
       return;
     }
 
@@ -110,7 +111,7 @@ class _CreateNewsScreenState extends State<CreateNewsScreen> {
 
     UIHelpers.showSuccessSnackBar(
       context,
-      isPublished ? 'News item "$title" published successfully!' : 'Draft saved successfully!',
+      isPublished ? 'News article "$title" published successfully!' : 'Draft saved successfully!',
     );
 
     Navigator.pop(context);
@@ -121,7 +122,8 @@ class _CreateNewsScreenState extends State<CreateNewsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Add Category'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppConstants.radiusMedium)),
+        title: const Text('Add Category', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         content: TextField(
           controller: catController,
           autofocus: true,
@@ -132,7 +134,10 @@ class _CreateNewsScreenState extends State<CreateNewsScreen> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00965E)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00965E),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
             onPressed: () {
               final cat = catController.text.trim();
               if (cat.isNotEmpty && !_selectedCategories.contains(cat)) {
@@ -140,7 +145,7 @@ class _CreateNewsScreenState extends State<CreateNewsScreen> {
               }
               Navigator.pop(ctx);
             },
-            child: const Text('Add', style: TextStyle(color: Colors.white)),
+            child: const Text('Add', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -152,7 +157,8 @@ class _CreateNewsScreenState extends State<CreateNewsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Add Tag'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppConstants.radiusMedium)),
+        title: const Text('Add Tag', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         content: TextField(
           controller: tagController,
           autofocus: true,
@@ -163,7 +169,10 @@ class _CreateNewsScreenState extends State<CreateNewsScreen> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00965E)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00965E),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
             onPressed: () {
               final tag = tagController.text.trim().replaceAll('#', '');
               if (tag.isNotEmpty && !_tags.contains(tag)) {
@@ -171,7 +180,7 @@ class _CreateNewsScreenState extends State<CreateNewsScreen> {
               }
               Navigator.pop(ctx);
             },
-            child: const Text('Add', style: TextStyle(color: Colors.white)),
+            child: const Text('Add', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -186,310 +195,303 @@ class _CreateNewsScreenState extends State<CreateNewsScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0.5,
+        elevation: 0,
+        scrolledUnderElevation: 1,
+        surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary, size: 18),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary, size: 20),
+          tooltip: 'Back',
           onPressed: () => Navigator.pop(context),
         ),
         titleSpacing: 0,
         title: Text(
-          isEditing ? 'Editing news item...' : 'Creating a news item...',
+          isEditing ? 'Edit News Article' : 'Create News Article',
           style: AppTextStyles.titleMedium.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
+            fontSize: 18,
           ),
         ),
         actions: [
-          // Publish Button (Green CTA matching screenshot)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 4.0),
-            child: ElevatedButton(
-              onPressed: () => _saveNews(isPublished: true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF00965E), // Sitefinity green
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                elevation: 0,
-              ),
-              child: const Text(
-                'Publish',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-              ),
-            ),
-          ),
-
-          // Save as Draft
-          TextButton(
+          TextButton.icon(
             onPressed: () => _saveNews(isPublished: false),
-            child: Text(
-              'Save as Draft',
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
+            icon: const Icon(Icons.save_outlined, size: 18, color: AppColors.primary),
+            label: Text(
+              'Save Draft',
+              style: AppTextStyles.labelMedium.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
-
-          IconButton(
-            icon: const Icon(Icons.more_horiz_rounded, color: AppColors.textSecondary),
-            onPressed: () {},
-          ),
+          const SizedBox(width: 8),
         ],
       ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 1. Title Input (Large matching screenshot)
-              TextField(
-                controller: _titleController,
-                style: AppTextStyles.headlineMedium.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20.0, 16.0, 20.0, 24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. Title Input
+                CustomTextField(
+                  label: 'Title',
+                  hintText: 'e.g. Idealake Announces Digital Platform Expansion',
+                  controller: _titleController,
+                  prefixIcon: const Icon(Icons.title_rounded, size: 20, color: AppColors.textSecondary),
+                  validator: (v) => Validators.validateRequired(v, fieldName: 'Title'),
                 ),
-                decoration: const InputDecoration(
-                  hintText: 'Title',
-                  hintStyle: TextStyle(
-                    color: Color(0xFFB0B0B0),
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(vertical: 8),
-                ),
-              ),
-              const Divider(color: Color(0xFFE2E8F0), thickness: 1),
-              const SizedBox(height: 12),
+                const SizedBox(height: 18),
 
-              // 2. Content Input
-              TextField(
-                controller: _contentController,
-                minLines: 6,
-                maxLines: 15,
-                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary, height: 1.5),
-                decoration: const InputDecoration(
-                  hintText: 'Content',
-                  hintStyle: TextStyle(color: Color(0xFFA0AEC0)),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.zero,
+                // 2. Content Input
+                CustomTextField(
+                  label: 'Content',
+                  hintText: 'Write the full news article content here...',
+                  controller: _contentController,
+                  minLines: 6,
+                  maxLines: 12,
+                  keyboardType: TextInputType.multiline,
                 ),
-              ),
-              const Divider(color: Color(0xFFE2E8F0), thickness: 1),
-              const SizedBox(height: 16),
+                const SizedBox(height: 18),
 
-              // 3. Summary Section (matching screenshot)
-              Text(
-                'Summary',
-                style: AppTextStyles.titleSmall.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.border),
-                  borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
-                ),
-                child: TextField(
+                // 3. Summary Section
+                CustomTextField(
+                  label: 'Summary',
+                  hintText: 'Provide a brief summary or abstract of this article...',
                   controller: _summaryController,
                   minLines: 3,
                   maxLines: 5,
-                  style: AppTextStyles.bodyMedium,
-                  decoration: const InputDecoration(
-                    hintText: 'Provide a brief summary of this article...',
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.all(12),
-                  ),
+                  keyboardType: TextInputType.multiline,
                 ),
-              ),
-              const SizedBox(height: 24),
-              const Divider(color: Color(0xFFE2E8F0), thickness: 1),
+                const SizedBox(height: 20),
+                const Divider(color: Color(0xFFE2E8F0), thickness: 1),
 
-              // 4. Categories and tags Accordion (Screenshot 2 & 3)
-              _buildAccordionSection(
-                title: 'Categories and tags',
-                isExpanded: _categoriesExpanded,
-                onToggle: () => setState(() => _categoriesExpanded = !_categoriesExpanded),
-                children: [
-                  // Categories
-                  Text(
-                    'Categories',
-                    style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      ..._selectedCategories.map((cat) => Chip(
-                            label: Text(cat, style: const TextStyle(fontSize: 12)),
-                            backgroundColor: const Color(0xFFE6F4EA),
-                            labelStyle: const TextStyle(color: Color(0xFF00965E), fontWeight: FontWeight.bold),
-                            deleteIcon: const Icon(Icons.close, size: 14, color: Color(0xFF00965E)),
-                            onDeleted: () {
-                              setState(() => _selectedCategories.remove(cat));
-                            },
-                          )),
-                      ActionChip(
-                        avatar: const Icon(Icons.add, size: 16, color: AppColors.primary),
-                        label: const Text('Add Category', style: TextStyle(fontSize: 12)),
-                        onPressed: _showAddCategoryDialog,
+                // 4. Categories and Tags Accordion
+                _buildAccordionSection(
+                  title: 'Categories & Tags',
+                  icon: Icons.label_outline_rounded,
+                  isExpanded: _categoriesExpanded,
+                  onToggle: () => setState(() => _categoriesExpanded = !_categoriesExpanded),
+                  children: [
+                    Text(
+                      'Categories',
+                      style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        ..._selectedCategories.map((cat) => Chip(
+                              label: Text(cat, style: const TextStyle(fontSize: 12)),
+                              backgroundColor: const Color(0xFFE6F4EA),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+                                side: const BorderSide(color: Color(0xFF00965E), width: 0.8),
+                              ),
+                              labelStyle: const TextStyle(color: Color(0xFF00965E), fontWeight: FontWeight.bold),
+                              deleteIcon: const Icon(Icons.close, size: 14, color: Color(0xFF00965E)),
+                              onDeleted: () {
+                                setState(() => _selectedCategories.remove(cat));
+                              },
+                            )),
+                        ActionChip(
+                          avatar: const Icon(Icons.add, size: 16, color: Color(0xFF003D99)),
+                          label: const Text('Add Category', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+                            side: const BorderSide(color: AppColors.border),
+                          ),
+                          onPressed: _showAddCategoryDialog,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    Text(
+                      'Tags',
+                      style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        ..._tags.map((tag) => Chip(
+                              label: Text('#$tag', style: const TextStyle(fontSize: 12)),
+                              backgroundColor: const Color(0xFFF1F5F9),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+                                side: const BorderSide(color: AppColors.border, width: 0.8),
+                              ),
+                              deleteIcon: const Icon(Icons.close, size: 14),
+                              onDeleted: () {
+                                setState(() => _tags.remove(tag));
+                              },
+                            )),
+                        ActionChip(
+                          avatar: const Icon(Icons.add, size: 16, color: Color(0xFF003D99)),
+                          label: const Text('Add Tag', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+                            side: const BorderSide(color: AppColors.border),
+                          ),
+                          onPressed: _showAddTagDialog,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const Divider(color: Color(0xFFE2E8F0), thickness: 1),
+
+                // 5. Additional info (Author, Source) Accordion
+                _buildAccordionSection(
+                  title: 'Additional Info (Author, Source)',
+                  icon: Icons.person_outline_rounded,
+                  isExpanded: _additionalInfoExpanded,
+                  onToggle: () => setState(() => _additionalInfoExpanded = !_additionalInfoExpanded),
+                  children: [
+                    CustomTextField(
+                      label: 'Author',
+                      hintText: 'e.g. Pooja Shelke',
+                      controller: _authorController,
+                      prefixIcon: const Icon(Icons.person_outline_rounded, size: 18),
+                    ),
+                    const SizedBox(height: 14),
+                    CustomTextField(
+                      label: 'Source Name',
+                      hintText: 'e.g. Idealake Press',
+                      controller: _sourceNameController,
+                      prefixIcon: const Icon(Icons.business_outlined, size: 18),
+                    ),
+                    const SizedBox(height: 14),
+                    CustomTextField(
+                      label: 'Source URL',
+                      hintText: 'https://...',
+                      controller: _sourceUrlController,
+                      prefixIcon: const Icon(Icons.link_rounded, size: 18),
+                    ),
+                  ],
+                ),
+                const Divider(color: Color(0xFFE2E8F0), thickness: 1),
+
+                // 6. More options (URL, Comments) Accordion
+                _buildAccordionSection(
+                  title: 'More Options (URL, SEO)',
+                  icon: Icons.tune_rounded,
+                  isExpanded: _moreOptionsExpanded,
+                  onToggle: () => setState(() => _moreOptionsExpanded = !_moreOptionsExpanded),
+                  children: [
+                    CustomTextField(
+                      label: 'URL Slug',
+                      hintText: 'e.g. new-platform-announcement',
+                      controller: _urlController,
+                      prefixIcon: const Icon(Icons.language_rounded, size: 18),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Include in sitemap checkbox
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      activeColor: const Color(0xFF00965E),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                      title: Text(
+                        'Include in sitemap',
+                        style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Tags
-                  Text(
-                    'Tags',
-                    style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      ..._tags.map((tag) => Chip(
-                            label: Text('#$tag', style: const TextStyle(fontSize: 12)),
-                            backgroundColor: AppColors.background,
-                            deleteIcon: const Icon(Icons.close, size: 14),
-                            onDeleted: () {
-                              setState(() => _tags.remove(tag));
-                            },
-                          )),
-                      ActionChip(
-                        avatar: const Icon(Icons.add, size: 16, color: AppColors.primary),
-                        label: const Text('Add Tag', style: TextStyle(fontSize: 12)),
-                        onPressed: _showAddTagDialog,
+                      subtitle: Text(
+                        'Allow search engines to index this content in Sitemap',
+                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                       ),
-                    ],
-                  ),
-                ],
-              ),
-              const Divider(color: Color(0xFFE2E8F0), thickness: 1),
-
-              // 5. Additional info (Author, Source) Accordion (Screenshot 3 & 4)
-              _buildAccordionSection(
-                title: 'Additional info (Author, Source)',
-                isExpanded: _additionalInfoExpanded,
-                onToggle: () => setState(() => _additionalInfoExpanded = !_additionalInfoExpanded),
-                children: [
-                  CustomTextField(
-                    label: 'Author',
-                    hintText: 'e.g. Pooja Shelke',
-                    controller: _authorController,
-                    prefixIcon: const Icon(Icons.person_outline_rounded, size: 18),
-                  ),
-                  const SizedBox(height: 12),
-                  CustomTextField(
-                    label: 'Source name',
-                    hintText: 'e.g. Idealake Press',
-                    controller: _sourceNameController,
-                    prefixIcon: const Icon(Icons.business_outlined, size: 18),
-                  ),
-                  const SizedBox(height: 12),
-                  CustomTextField(
-                    label: 'Source URL',
-                    hintText: 'https://...',
-                    controller: _sourceUrlController,
-                    prefixIcon: const Icon(Icons.link_rounded, size: 18),
-                  ),
-                ],
-              ),
-              const Divider(color: Color(0xFFE2E8F0), thickness: 1),
-
-              // 6. More options (URL, Comments) Accordion (Screenshot 4 & 5)
-              _buildAccordionSection(
-                title: 'More options (URL, Comments)',
-                isExpanded: _moreOptionsExpanded,
-                onToggle: () => setState(() => _moreOptionsExpanded = !_moreOptionsExpanded),
-                children: [
-                  CustomTextField(
-                    label: 'URL',
-                    hintText: 'Enter URL slug (e.g. new-platform-announcement)',
-                    controller: _urlController,
-                    prefixIcon: const Icon(Icons.language_rounded, size: 18),
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Include in sitemap checkbox matching screenshot
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    controlAffinity: ListTileControlAffinity.leading,
-                    activeColor: const Color(0xFF00965E),
-                    title: Text(
-                      'Include in sitemap',
-                      style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold),
+                      value: _includeInSitemap,
+                      onChanged: (val) => setState(() => _includeInSitemap = val ?? true),
                     ),
-                    subtitle: Text(
-                      'Allow external search engines to index this content and include in Sitemap',
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
-                    ),
-                    value: _includeInSitemap,
-                    onChanged: (val) => setState(() => _includeInSitemap = val ?? true),
-                  ),
 
-                  // Comments checkbox matching screenshot
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    controlAffinity: ListTileControlAffinity.leading,
-                    activeColor: const Color(0xFF00965E),
-                    title: Text(
-                      'Comments',
-                      style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(
-                      'Allow comments',
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
-                    ),
-                    value: _allowComments,
-                    onChanged: (val) => setState(() => _allowComments = val ?? true),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // Bottom Action Buttons (Screenshot 5)
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => _saveNews(isPublished: true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF00965E),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppConstants.radiusMedium)),
-                        elevation: 0,
+                    // Comments checkbox
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      activeColor: const Color(0xFF00965E),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                      title: Text(
+                        'Allow Comments',
+                        style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold),
                       ),
-                      child: const Text(
-                        'Publish',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                      subtitle: Text(
+                        'Allow readers to post comments on this article',
+                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                       ),
+                      value: _allowComments,
+                      onChanged: (val) => setState(() => _allowComments = val ?? true),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
+                  ],
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+        ),
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: const Border(top: BorderSide(color: Color(0xFFE2E8F0), width: 1)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 48,
                     child: OutlinedButton(
                       onPressed: () => _saveNews(isPublished: false),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        side: const BorderSide(color: AppColors.border),
+                        foregroundColor: AppColors.textPrimary,
+                        side: const BorderSide(color: AppColors.border, width: 1.2),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppConstants.radiusMedium)),
                       ),
                       child: const Text(
                         'Save as Draft',
-                        style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15),
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                       ),
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 32),
-            ],
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SizedBox(
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _saveNews(isPublished: true),
+                      icon: const Icon(Icons.publish_rounded, color: Colors.white, size: 18),
+                      label: const Text(
+                        'Publish Article',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF00965E), // Sitefinity green
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppConstants.radiusMedium)),
+                        elevation: 0,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -498,6 +500,7 @@ class _CreateNewsScreenState extends State<CreateNewsScreen> {
 
   Widget _buildAccordionSection({
     required String title,
+    required IconData icon,
     required bool isExpanded,
     required VoidCallback onToggle,
     required List<Widget> children,
@@ -518,13 +521,17 @@ class _CreateNewsScreenState extends State<CreateNewsScreen> {
                     Icon(
                       isExpanded ? Icons.keyboard_arrow_down_rounded : Icons.keyboard_arrow_right_rounded,
                       color: AppColors.textSecondary,
+                      size: 20,
                     ),
+                    const SizedBox(width: 8),
+                    Icon(icon, size: 18, color: const Color(0xFF003D99)),
                     const SizedBox(width: 8),
                     Text(
                       title,
                       style: AppTextStyles.titleSmall.copyWith(
                         fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary,
+                        fontSize: 14,
                       ),
                     ),
                   ],
@@ -535,7 +542,7 @@ class _CreateNewsScreenState extends State<CreateNewsScreen> {
         ),
         if (isExpanded)
           Padding(
-            padding: const EdgeInsets.only(left: 8.0, bottom: 16.0, top: 4.0),
+            padding: const EdgeInsets.only(left: 6.0, bottom: 16.0, top: 4.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: children,
