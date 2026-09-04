@@ -67,6 +67,7 @@ class DocumentsBloc extends Bloc<DocumentsEvent, DocumentsState> {
     try {
       final files = await _repository.fetchDocumentsInLibrary(
         event.library.id,
+        libraryTitle: event.library.title,
         forceRefresh: event.forceRefresh,
         offlineOnly: state.offlineOnly,
       );
@@ -74,6 +75,7 @@ class DocumentsBloc extends Bloc<DocumentsEvent, DocumentsState> {
     } catch (e) {
       final cached = await _repository.fetchDocumentsInLibrary(
         event.library.id,
+        libraryTitle: event.library.title,
         offlineOnly: state.offlineOnly,
       );
       emit(state.copyWith(filesResponse: ApiResponse.completed(cached)));
@@ -85,6 +87,7 @@ class DocumentsBloc extends Bloc<DocumentsEvent, DocumentsState> {
     if (state.selectedLibrary == null) return;
     final files = await _repository.fetchDocumentsInLibrary(
       state.selectedLibrary!.id,
+      libraryTitle: state.selectedLibrary!.title,
       searchQuery: event.query,
       offlineOnly: state.offlineOnly,
     );
@@ -101,6 +104,7 @@ class DocumentsBloc extends Bloc<DocumentsEvent, DocumentsState> {
     if (state.selectedLibrary != null) {
       final files = await _repository.fetchDocumentsInLibrary(
         state.selectedLibrary!.id,
+        libraryTitle: state.selectedLibrary!.title,
         offlineOnly: event.offlineOnly,
       );
       emit(state.copyWith(filesResponse: ApiResponse.completed(files)));
@@ -113,6 +117,7 @@ class DocumentsBloc extends Bloc<DocumentsEvent, DocumentsState> {
     if (state.selectedLibrary != null) {
       final files = await _repository.fetchDocumentsInLibrary(
         state.selectedLibrary!.id,
+        libraryTitle: state.selectedLibrary!.title,
         offlineOnly: state.offlineOnly,
       );
       emit(state.copyWith(filesResponse: ApiResponse.completed(files)));
@@ -150,7 +155,10 @@ class DocumentsBloc extends Bloc<DocumentsEvent, DocumentsState> {
     await _repository.uploadDocument(newDoc);
 
     // Refresh files in current library
-    final files = await _repository.fetchDocumentsInLibrary(event.libraryId);
+    final files = await _repository.fetchDocumentsInLibrary(
+      event.libraryId,
+      libraryTitle: event.libraryTitle,
+    );
     final libraries = await _repository.fetchLibraries();
     emit(state.copyWith(
       filesResponse: ApiResponse.completed(files),

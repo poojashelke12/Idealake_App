@@ -61,7 +61,11 @@ class DocumentModel extends Equatable {
     );
   }
 
-  factory DocumentModel.fromJson(Map<String, dynamic> json) {
+  factory DocumentModel.fromJson(
+    Map<String, dynamic> json, {
+    String defaultLibraryTitle = 'ResumeDocument',
+    String defaultLibraryId = 'lib-001',
+  }) {
     // 1. Id
     final id = json['Id']?.toString() ?? json['id']?.toString() ?? '';
 
@@ -70,13 +74,13 @@ class DocumentModel extends Equatable {
         json['FolderId']?.toString() ??
         json['LibraryId']?.toString() ??
         json['libraryId']?.toString() ??
-        'lib-001';
+        defaultLibraryId;
 
     // 3. Library Title
     final libraryTitle = json['LibraryTitle']?.toString() ??
         json['libraryTitle']?.toString() ??
         (json['Folder'] is Map ? json['Folder']['Title']?.toString() : null) ??
-        'Documents';
+        defaultLibraryTitle;
 
     // 4. Title
     final title = json['Title']?.toString() ??
