@@ -316,11 +316,11 @@ class _MainNavScreenState extends State<MainNavScreen> {
                 authState.currentUser ??
                 locator<AuthRepository>().getCurrentUser() ??
                 const UserModel(
-                  id: 'usr-101',
-                  fullName: 'Rakesh Sunar',
-                  email: 'rakesh.sunar@idealake.com',
-                  role: 'Technical Lead / CMS Admin',
-                  department: 'Digital Solutions - LTFS',
+                  id: 'usr-001',
+                  fullName: 'Enterprise User',
+                  email: 'user@idealake.com',
+                  role: 'Sitefinity User',
+                  department: 'Digital Solutions',
                 );
 
             return Column(
