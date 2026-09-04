@@ -179,35 +179,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
 
               // Multi-Selection Toolbar Banner
               if (_selectedLibraryIds.isNotEmpty)
-                _buildSelectionBanner(context, libraries)
-              else
-                // Column Header row matching Screenshot 1 (DOCUMENTS LIBRARY / ACTIONS)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
-                  child: Row(
-                    children: [
-                      Text(
-                        'DOCUMENTS LIBRARY',
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.textTertiary,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.8,
-                          fontSize: 10,
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        'ACTIONS',
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.textTertiary,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.8,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                _buildSelectionBanner(context, libraries),
+
+              const SizedBox(height: 4),
 
               // Dynamic List of Document Libraries
               Expanded(

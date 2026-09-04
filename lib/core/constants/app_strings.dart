@@ -3,7 +3,7 @@ class AppStrings {
   AppStrings._();
 
   // General App
-  static const String appName = 'Idealake - LTFS';
+  static const String appName = 'Intranet Portal';
   static const String companyName = 'Idealake Information Technology';
   static const String tagline = 'Transforming Digital Experiences';
 
@@ -17,7 +17,8 @@ class AppStrings {
   // Auth / Login
   static const String loginTitle = 'Welcome Back';
   static const String loginSubtitle = 'Sign in to access your portal & services';
-  static const String emailOrMobile = 'Email / Mobile Number';
+  static const String email = 'Email';
+  static const String emailOrMobile = 'Email';
   static const String password = 'Password';
   static const String forgotPassword = 'Forgot Password?';
   static const String loginButton = 'Sign In';

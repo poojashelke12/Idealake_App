@@ -47,14 +47,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _fillDemoCredentials(String username, String password) {
-    setState(() {
-      _usernameController.text = username;
-      _passwordController.text = password;
-    });
-    UIHelpers.showSuccessSnackBar(context, 'Filled credentials for $username');
-  }
-
   void _showForgotPasswordDialog() {
     final emailController = TextEditingController(
       text: _usernameController.text,
@@ -209,7 +201,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   // Title & Subtitle
                   Text(
-                    'Welcome to\nIdealake • LTFS Portal',
+                    'Welcome to\nIntranet Portal',
                     style: AppTextStyles.headlineMedium.copyWith(
                       fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary,
@@ -225,10 +217,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 28),
 
-                  // Email/Username Field
+                  // Email Field
                   CustomTextField(
-                    label: AppStrings.emailOrMobile,
-                    hintText: 'e.g. rakesh.sunar@idealake.com',
+                    label: AppStrings.email,
+                    hintText: 'e.g. user@idealake.com',
                     controller: _usernameController,
                     keyboardType: TextInputType.emailAddress,
                     prefixIcon: const Icon(
@@ -238,7 +230,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     validator: (v) => Validators.validateRequired(
                       v,
-                      fieldName: 'Email / Username',
+                      fieldName: 'Email',
                     ),
                   ),
                   const SizedBox(height: 18),
@@ -297,7 +289,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
 
                   // Sign In Button
                   BlocBuilder<AuthBloc, AuthState>(
@@ -313,42 +305,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: _handleLogin,
                       );
                     },
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Enterprise SSO Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        _fillDemoCredentials(
-                          'rakesh.sunar@idealake.com',
-                          'Sitefinity@2026',
-                        );
-                        _handleLogin();
-                      },
-                      icon: const Icon(
-                        Icons.domain_rounded,
-                        size: 18,
-                        color: AppColors.textPrimary,
-                      ),
-                      label: Text(
-                        'Continue with Enterprise SSO / AD',
-                        style: AppTextStyles.labelMedium.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppColors.border),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            AppConstants.radiusMedium,
-                          ),
-                        ),
-                      ),
-                    ),
                   ),
                   const SizedBox(height: 32),
 

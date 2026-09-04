@@ -59,22 +59,19 @@ class _CareerScreenState extends State<CareerScreen> {
                   const SizedBox(height: 16),
 
                   // 2. Search Bar
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: CustomSearchBar(
-                      controller: _searchController,
-                      hintText: 'Search roles, skills, or locations...',
-                      onChanged: (query) {
-                        context.read<CareerBloc>().add(
-                          CareerSearchEvent(query),
-                        );
-                      },
-                      onClear: () {
-                        context.read<CareerBloc>().add(
-                          const CareerSearchEvent(''),
-                        );
-                      },
-                    ),
+                  CustomSearchBar(
+                    controller: _searchController,
+                    hintText: 'Search roles, skills, or locations...',
+                    onChanged: (query) {
+                      context.read<CareerBloc>().add(
+                        CareerSearchEvent(query),
+                      );
+                    },
+                    onClear: () {
+                      context.read<CareerBloc>().add(
+                        const CareerSearchEvent(''),
+                      );
+                    },
                   ),
 
                   const SizedBox(height: 12),
