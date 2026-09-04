@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/constants/api_endpoints.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/network/base_api_service.dart';
 import '../../../core/network/odata_query_builder.dart';
 import '../models/document_library_model.dart';
@@ -51,6 +52,19 @@ class DocumentsRepository {
       }
     }
 
+    // Reflect latest count for ResumeDocument from cached documents
+    final cachedDocs = _getCachedDocuments()
+        .where((d) => d.libraryId == 'lib-001' || d.libraryTitle.toLowerCase().contains('resume') || d.libraryId.isEmpty)
+        .toList();
+    if (cachedDocs.isNotEmpty) {
+      libraries = libraries.map((lib) {
+        if (lib.id == 'lib-001' || lib.title.toLowerCase().contains('resume')) {
+          return lib.copyWith(documentCount: cachedDocs.length);
+        }
+        return lib;
+      }).toList();
+    }
+
     if (searchQuery != null && searchQuery.trim().isNotEmpty) {
       final query = searchQuery.trim().toLowerCase();
       libraries = libraries.where((lib) {
@@ -63,46 +77,84 @@ class DocumentsRepository {
     return libraries;
   }
 
-  /// Fetch all Documents inside a specific Library (Level 2) directly from Sitefinity CMS OData API
+  /// Fetch all Documents inside a specific Library (Level 2) directly from Sitefinity CMS Documents API
   Future<List<DocumentModel>> fetchDocumentsInLibrary(
     String libraryId, {
+    String? libraryTitle,
     bool forceRefresh = false,
     String? searchQuery,
     bool offlineOnly = false,
   }) async {
-    List<DocumentModel> allDocs = [];
+    final title = libraryTitle?.trim().toLowerCase() ?? '';
+    final isDefaultLibrary = libraryId == 'lib-002' ||
+        libraryId.toLowerCase().contains('default') ||
+        title.contains('default');
 
-    // 1. If not forcing refresh, check local cache first
-    if (!forceRefresh) {
-      allDocs = _getCachedDocuments();
+    // Requirement: Not in default library, keep it as it is (empty list / default state)
+    if (isDefaultLibrary) {
+      final defaultDocs = _getCachedDocuments()
+          .where((doc) =>
+              doc.libraryId == 'lib-002' ||
+              doc.libraryTitle.toLowerCase() == 'default library')
+          .toList();
+      return _filterDocuments(defaultDocs, searchQuery: searchQuery, offlineOnly: offlineOnly);
     }
 
-    // 2. Fetch from live Sitefinity Document API (/api/default/documents)
+    List<DocumentModel> allDocs = [];
+
+    // 1. If not forcing refresh, check local cache first for ResumeDocument
+    if (!forceRefresh) {
+      allDocs = _getCachedDocuments()
+          .where((doc) =>
+              doc.libraryId == 'lib-001' ||
+              doc.libraryTitle.toLowerCase().contains('resume') ||
+              doc.libraryId.isEmpty)
+          .toList();
+    }
+
+    // 2. Fetch latest data list directly from Sitefinity Document API (/api/default/documents)
     if (allDocs.isEmpty || forceRefresh) {
       try {
-        final queryParams = ODataQueryBuilder()
-            .orderBy('LastModified', ascending: false)
-            .build();
+        // Take latest token from login API (stored in SharedPreferences)
+        final token = _prefs.getString(AppConstants.keyAuthToken);
+        final sfTokenId = _prefs.getString(AppConstants.keySfTokenId) ?? AppConstants.defaultSfTokenId;
+
+        final Map<String, String> headers = {
+          'Cookie': 'SF-TokenId=$sfTokenId',
+        };
+        if (token != null && token.trim().isNotEmpty) {
+          headers['Authorization'] = 'Bearer ${token.trim()}';
+        }
 
         final response = await _apiService.getGetApiResponse(
           ApiEndpoints.documents,
-          queryParameters: queryParams,
+          headers: headers,
         );
 
         if (response != null && (response['value'] is List || response['data'] is List)) {
           final list = (response['value'] ?? response['data']) as List;
           final apiDocs = list
-              .map((e) => DocumentModel.fromJson(e as Map<String, dynamic>))
+              .map((e) => DocumentModel.fromJson(
+                    e as Map<String, dynamic>,
+                    defaultLibraryTitle: 'ResumeDocument',
+                    defaultLibraryId: 'lib-001',
+                  ))
               .toList();
 
           if (apiDocs.isNotEmpty) {
             allDocs = apiDocs;
             await _cacheDocuments(allDocs);
+            await _updateResumeDocumentCount(allDocs.length);
           }
         }
       } catch (_) {
         if (allDocs.isEmpty) {
-          allDocs = _getCachedDocuments();
+          allDocs = _getCachedDocuments()
+              .where((doc) =>
+                  doc.libraryId == 'lib-001' ||
+                  doc.libraryTitle.toLowerCase().contains('resume') ||
+                  doc.libraryId.isEmpty)
+              .toList();
           if (allDocs.isEmpty) {
             allDocs = _getInitialPocDocuments();
             await _cacheDocuments(allDocs);
@@ -112,37 +164,41 @@ class DocumentsRepository {
     }
 
     if (allDocs.isEmpty) {
-      allDocs = _getCachedDocuments();
+      allDocs = _getCachedDocuments()
+          .where((doc) =>
+              doc.libraryId == 'lib-001' ||
+              doc.libraryTitle.toLowerCase().contains('resume') ||
+              doc.libraryId.isEmpty)
+          .toList();
       if (allDocs.isEmpty) {
         allDocs = _getInitialPocDocuments();
         await _cacheDocuments(allDocs);
       }
     }
 
-    // 3. Filter strictly by libraryId / title
-    var items = allDocs.where((doc) {
-      if (libraryId == 'lib-002' || libraryId.toLowerCase().contains('default')) {
-        return doc.libraryId == 'lib-002' || doc.libraryTitle.toLowerCase() == 'default library';
-      }
-      if (libraryId == 'lib-001' || libraryId.toLowerCase().contains('resume')) {
-        return doc.libraryId == 'lib-001' || doc.libraryTitle.toLowerCase().contains('resume') || doc.libraryId.isEmpty;
-      }
-      return doc.libraryId == libraryId;
-    }).toList();
+    return _filterDocuments(allDocs, searchQuery: searchQuery, offlineOnly: offlineOnly);
+  }
 
-    // 4. Attach offline downloaded state
+  List<DocumentModel> _filterDocuments(
+    List<DocumentModel> items, {
+    String? searchQuery,
+    bool offlineOnly = false,
+  }) {
+    var result = List<DocumentModel>.from(items);
+
+    // Attach offline downloaded state
     final downloadedIds = _getDownloadedIds();
-    items = items.map((doc) => doc.copyWith(isDownloaded: downloadedIds.contains(doc.id))).toList();
+    result = result.map((doc) => doc.copyWith(isDownloaded: downloadedIds.contains(doc.id))).toList();
 
-    // 5. Offline only filter
+    // Offline only filter
     if (offlineOnly) {
-      items = items.where((doc) => doc.isDownloaded).toList();
+      result = result.where((doc) => doc.isDownloaded).toList();
     }
 
-    // 6. Search query filter
+    // Search query filter
     if (searchQuery != null && searchQuery.trim().isNotEmpty) {
       final query = searchQuery.trim().toLowerCase();
-      items = items.where((item) {
+      result = result.where((item) {
         return item.title.toLowerCase().contains(query) ||
             item.description.toLowerCase().contains(query) ||
             item.fileExtension.toLowerCase().contains(query) ||
@@ -150,7 +206,20 @@ class DocumentsRepository {
       }).toList();
     }
 
-    return items;
+    return result;
+  }
+
+  Future<void> _updateResumeDocumentCount(int count) async {
+    final currentLibs = _getCachedLibraries();
+    if (currentLibs.isNotEmpty) {
+      final updated = currentLibs.map((lib) {
+        if (lib.id == 'lib-001' || lib.title.toLowerCase().contains('resume')) {
+          return lib.copyWith(documentCount: count);
+        }
+        return lib;
+      }).toList();
+      await _cacheLibraries(updated);
+    }
   }
 
   /// Create a new Document Library (matches "Create a library" button)

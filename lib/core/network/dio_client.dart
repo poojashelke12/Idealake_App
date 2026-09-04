@@ -42,12 +42,10 @@ class _AuthInterceptor extends Interceptor {
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    // 1. Inject Authorization header if token exists
+    // 1. Inject Authorization header if token exists in preferences
     final token = _prefs.getString(AppConstants.keyAuthToken);
-    if (token != null && token.isNotEmpty) {
-      options.headers['Authorization'] = 'Bearer $token';
-    } else {
-      options.headers.remove('Authorization');
+    if (token != null && token.trim().isNotEmpty) {
+      options.headers['Authorization'] = 'Bearer ${token.trim()}';
     }
 
     // 2. Inject Cookie header with SF-TokenId if available
