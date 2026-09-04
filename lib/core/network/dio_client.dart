@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants/api_endpoints.dart';
 import '../constants/app_constants.dart';
+import 'session_manager.dart';
 
 /// Singleton Dio Client with centralized configuration and interceptors
 class DioClient {
@@ -55,6 +56,35 @@ class _AuthInterceptor extends Interceptor {
     }
 
     return handler.next(options);
+  }
+
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    // Check if 200 OK returned an unauthorized payload:
+    // e.g. {error: {code: Unauthorized, message: The current user is not allowed access}}
+    if (SessionManager.isSessionExpired(
+      response.data,
+      response.statusCode,
+      path: response.requestOptions.path,
+    )) {
+      SessionManager.handleSessionExpired(prefs: _prefs, errorData: response.data);
+    }
+    return handler.next(response);
+  }
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    // Check if error response has 401/403 or unauthorized payload
+    final data = err.response?.data;
+    final statusCode = err.response?.statusCode;
+    if (SessionManager.isSessionExpired(
+      data,
+      statusCode,
+      path: err.requestOptions.path,
+    )) {
+      SessionManager.handleSessionExpired(prefs: _prefs, errorData: data);
+    }
+    return handler.next(err);
   }
 }
 

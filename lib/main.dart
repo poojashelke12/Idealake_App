@@ -44,6 +44,7 @@ class IdealakeApp extends StatelessWidget {
         BlocProvider<AuthBloc>(create: (_) => locator<AuthBloc>()),
       ],
       child: MaterialApp(
+        navigatorKey: AppRouter.navigatorKey,
         title: AppStrings.appName,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
