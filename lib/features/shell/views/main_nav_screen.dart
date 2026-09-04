@@ -96,7 +96,8 @@ class _MainNavScreenState extends State<MainNavScreen> {
             ),
             onPressed: () => _showProfileDialog(context),
           ),
-          const SizedBox(width: 8),
+
+          const SizedBox(width: 4),
         ],
       );
     }
@@ -162,7 +163,7 @@ class _MainNavScreenState extends State<MainNavScreen> {
         IconButton(
           tooltip: 'Sign Out',
           icon: const Icon(Icons.logout_rounded, color: AppColors.error),
-          onPressed: () => _showLogoutConfirmationDialog(context),
+          onPressed: () => _showLogoutConfirmationDialog(),
         ),
         const SizedBox(width: 4),
       ],
@@ -284,7 +285,7 @@ class _MainNavScreenState extends State<MainNavScreen> {
                     ),
                     onTap: () {
                       Navigator.pop(context);
-                      _showLogoutConfirmationDialog(context);
+                      _showLogoutConfirmationDialog();
                     },
                   ),
                 ],
@@ -296,12 +297,12 @@ class _MainNavScreenState extends State<MainNavScreen> {
     );
   }
 
-  void _showProfileDialog(BuildContext context) {
+  void _showProfileDialog(BuildContext parentContext) {
     showModalBottomSheet(
-      context: context,
+      context: parentContext,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => Container(
+      builder: (bottomSheetContext) => Container(
         padding: const EdgeInsets.all(24),
         decoration: const BoxDecoration(
           color: AppColors.surface,
@@ -310,7 +311,7 @@ class _MainNavScreenState extends State<MainNavScreen> {
           ),
         ),
         child: BlocBuilder<AuthBloc, AuthState>(
-          builder: (context, authState) {
+          builder: (blocContext, authState) {
             final user =
                 authState.currentUser ??
                 locator<AuthRepository>().getCurrentUser() ??
@@ -453,8 +454,8 @@ class _MainNavScreenState extends State<MainNavScreen> {
                   ),
                   textColor: AppColors.error,
                   onPressed: () {
-                    Navigator.pop(context);
-                    _showLogoutConfirmationDialog(context);
+                    Navigator.pop(bottomSheetContext);
+                    _showLogoutConfirmationDialog(parentContext);
                   },
                 ),
               ],
@@ -465,9 +466,13 @@ class _MainNavScreenState extends State<MainNavScreen> {
     );
   }
 
-  void _showLogoutConfirmationDialog(BuildContext context) {
+  void _showLogoutConfirmationDialog([BuildContext? targetCtx]) {
+    final dialogContextToUse = targetCtx ?? context;
+    if (!mounted) return;
+
     showDialog(
-      context: context,
+      context: dialogContextToUse,
+      barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(
@@ -500,9 +505,9 @@ class _MainNavScreenState extends State<MainNavScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(dialogContext);
-              _handleLogout(context);
+              await _handleLogout();
             },
             child: const Text(
               'Sign Out',
@@ -514,12 +519,21 @@ class _MainNavScreenState extends State<MainNavScreen> {
     );
   }
 
-  void _handleLogout(BuildContext context) {
-    context.read<AuthBloc>().add(AuthLogoutRequested());
-    Navigator.of(
-      context,
-      rootNavigator: true,
-    ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+  Future<void> _handleLogout() async {
+    try {
+      await locator<AuthRepository>().clearToken();
+    } catch (_) {}
+
+    if (mounted) {
+      context.read<AuthBloc>().add(AuthLogoutRequested());
+    }
+
+    if (mounted) {
+      Navigator.of(
+        context,
+        rootNavigator: true,
+      ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+    }
   }
 
   Widget _buildBottomNav() {
