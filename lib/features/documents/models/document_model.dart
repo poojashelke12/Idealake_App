@@ -12,9 +12,38 @@ class DocumentModel extends Equatable {
   final String category;
   final String fileSize;
   final String? downloadUrl;
+  final String? url;
   final DateTime updatedDate;
   final String uploadedBy;
   final bool isDownloaded;
+
+  String get previewUrl {
+    String target = (downloadUrl != null && downloadUrl!.trim().isNotEmpty)
+        ? downloadUrl!.trim()
+        : (url != null && url!.trim().isNotEmpty ? url!.trim() : '');
+
+    if (target.isEmpty) return '';
+
+    // If query string exists in downloadUrl but not in target, append it
+    if (!target.contains('?')) {
+      final querySource = (downloadUrl?.contains('?') ?? false)
+          ? downloadUrl!
+          : ((url?.contains('?') ?? false) ? url! : '');
+      if (querySource.isNotEmpty && querySource.contains('?')) {
+        target = '$target${querySource.substring(querySource.indexOf('?'))}';
+      }
+    }
+
+    // Ensure full scheme and host
+    if (!target.startsWith('http://') && !target.startsWith('https://')) {
+      if (!target.startsWith('/')) {
+        target = '/$target';
+      }
+      target = '${ApiEndpoints.baseUrl}$target';
+    }
+
+    return target;
+  }
 
   const DocumentModel({
     required this.id,
@@ -26,6 +55,7 @@ class DocumentModel extends Equatable {
     required this.category,
     required this.fileSize,
     this.downloadUrl,
+    this.url,
     required this.updatedDate,
     this.uploadedBy = 'Sitefinity Admin',
     this.isDownloaded = false,
@@ -41,6 +71,7 @@ class DocumentModel extends Equatable {
     String? category,
     String? fileSize,
     String? downloadUrl,
+    String? url,
     DateTime? updatedDate,
     String? uploadedBy,
     bool? isDownloaded,
@@ -55,6 +86,7 @@ class DocumentModel extends Equatable {
       category: category ?? this.category,
       fileSize: fileSize ?? this.fileSize,
       downloadUrl: downloadUrl ?? this.downloadUrl,
+      url: url ?? this.url,
       updatedDate: updatedDate ?? this.updatedDate,
       uploadedBy: uploadedBy ?? this.uploadedBy,
       isDownloaded: isDownloaded ?? this.isDownloaded,
@@ -118,20 +150,45 @@ class DocumentModel extends Equatable {
     final rawSize = json['TotalSize'] ?? json['fileSize'] ?? json['file_size'];
     final fileSize = _formatFileSize(rawSize);
 
-    // 9. Download / Media URL
-    String? downloadUrl = json['Url']?.toString() ??
-        json['downloadUrl']?.toString() ??
-        json['download_url']?.toString() ??
-        json['MediaUrl']?.toString();
-    if (downloadUrl != null &&
-        downloadUrl.isNotEmpty &&
-        !downloadUrl.startsWith('http')) {
-      if (downloadUrl.startsWith('/')) {
-        downloadUrl = '${ApiEndpoints.baseUrl}$downloadUrl';
-      } else {
-        downloadUrl = '${ApiEndpoints.baseUrl}/$downloadUrl';
+    // 9. Download / Media URL (resolving full absolute URL with query parameters)
+    final mediaUrl = json['MediaUrl']?.toString() ?? json['mediaUrl']?.toString();
+    final apiUrl = json['Url']?.toString() ?? json['url']?.toString();
+    final sfvrsn = json['sfvrsn']?.toString() ?? json['Sfvrsn']?.toString();
+
+    String candidateUrl = '';
+    // Prefer MediaUrl if it contains query parameters (e.g. ?sfvrsn=...&download=true)
+    if (mediaUrl != null && mediaUrl.contains('?')) {
+      candidateUrl = mediaUrl;
+    } else if (apiUrl != null && apiUrl.contains('?')) {
+      candidateUrl = apiUrl;
+    } else if (mediaUrl != null && mediaUrl.isNotEmpty) {
+      candidateUrl = mediaUrl;
+    } else if (apiUrl != null && apiUrl.isNotEmpty) {
+      candidateUrl = apiUrl;
+    } else {
+      candidateUrl = json['downloadUrl']?.toString() ?? json['download_url']?.toString() ?? '';
+    }
+
+    // If query string is missing from candidateUrl but available in mediaUrl or sfvrsn, append it
+    if (candidateUrl.isNotEmpty && !candidateUrl.contains('?')) {
+      if (mediaUrl != null && mediaUrl.contains('?')) {
+        candidateUrl = '$candidateUrl${mediaUrl.substring(mediaUrl.indexOf('?'))}';
+      } else if (sfvrsn != null && sfvrsn.isNotEmpty) {
+        candidateUrl = '$candidateUrl?sfvrsn=$sfvrsn&download=true';
       }
     }
+
+    // Ensure candidateUrl is an absolute URL with baseUrl
+    if (candidateUrl.isNotEmpty &&
+        !candidateUrl.startsWith('http://') &&
+        !candidateUrl.startsWith('https://')) {
+      if (!candidateUrl.startsWith('/')) {
+        candidateUrl = '/$candidateUrl';
+      }
+      candidateUrl = '${ApiEndpoints.baseUrl}$candidateUrl';
+    }
+
+    final downloadUrl = candidateUrl.isNotEmpty ? candidateUrl : null;
 
     // 10. Updated Date
     DateTime updatedDate = DateTime.now();
@@ -153,6 +210,22 @@ class DocumentModel extends Equatable {
     // 12. Is Downloaded
     final isDownloaded = json['isDownloaded'] == true;
 
+    // 13. API URL (from keyword "Url", formatted with full scheme, host, and query params)
+    String? rawUrl = apiUrl;
+    if (rawUrl != null && rawUrl.isNotEmpty) {
+      if (!rawUrl.contains('?') && candidateUrl.contains('?')) {
+        rawUrl = '$rawUrl${candidateUrl.substring(candidateUrl.indexOf('?'))}';
+      }
+      if (!rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')) {
+        if (!rawUrl.startsWith('/')) {
+          rawUrl = '/$rawUrl';
+        }
+        rawUrl = '${ApiEndpoints.baseUrl}$rawUrl';
+      }
+    } else {
+      rawUrl = downloadUrl;
+    }
+
     return DocumentModel(
       id: id,
       libraryId: libraryId,
@@ -163,6 +236,7 @@ class DocumentModel extends Equatable {
       category: category,
       fileSize: fileSize,
       downloadUrl: downloadUrl,
+      url: rawUrl,
       updatedDate: updatedDate,
       uploadedBy: uploadedBy,
       isDownloaded: isDownloaded,
@@ -198,6 +272,7 @@ class DocumentModel extends Equatable {
       'category': category,
       'fileSize': fileSize,
       'downloadUrl': downloadUrl,
+      'url': url,
       'updatedDate': updatedDate.toIso8601String(),
       'uploadedBy': uploadedBy,
       'isDownloaded': isDownloaded,
@@ -215,6 +290,7 @@ class DocumentModel extends Equatable {
         category,
         fileSize,
         downloadUrl,
+        url,
         updatedDate,
         uploadedBy,
         isDownloaded,
