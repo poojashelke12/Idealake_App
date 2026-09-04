@@ -30,11 +30,17 @@ class MainNavScreen extends StatefulWidget {
 class _MainNavScreenState extends State<MainNavScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    NewsListScreen(),
-    CareerScreen(),
-    DocumentsScreen(),
+  late final List<Widget> _screens = [
+    HomeScreen(
+      onTabSwitch: (index) {
+        if (mounted) {
+          setState(() => _currentIndex = index);
+        }
+      },
+    ),
+    const NewsListScreen(),
+    const CareerScreen(),
+    const DocumentsScreen(),
   ];
 
   final List<String> _titles = [
