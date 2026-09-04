@@ -43,7 +43,9 @@ class _CareerScreenState extends State<CareerScreen> {
           return RefreshIndicator(
             color: const Color(0xFF003D99),
             onRefresh: () async {
-              context.read<CareerBloc>().add(const CareerFetchEvent(forceRefresh: true));
+              context.read<CareerBloc>().add(
+                const CareerFetchEvent(forceRefresh: true),
+              );
             },
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -63,10 +65,14 @@ class _CareerScreenState extends State<CareerScreen> {
                       controller: _searchController,
                       hintText: 'Search roles, skills, or locations...',
                       onChanged: (query) {
-                        context.read<CareerBloc>().add(CareerSearchEvent(query));
+                        context.read<CareerBloc>().add(
+                          CareerSearchEvent(query),
+                        );
                       },
                       onClear: () {
-                        context.read<CareerBloc>().add(const CareerSearchEvent(''));
+                        context.read<CareerBloc>().add(
+                          const CareerSearchEvent(''),
+                        );
                       },
                     ),
                   ),
@@ -75,11 +81,6 @@ class _CareerScreenState extends State<CareerScreen> {
 
                   // 3. Dynamic Category Chips from API response
                   _buildCategoryChips(state),
-
-                  const SizedBox(height: 16),
-
-                  // 4. Perks & Culture Strip
-                  _buildPerksStrip(),
 
                   const SizedBox(height: 20),
 
@@ -126,7 +127,11 @@ class _CareerScreenState extends State<CareerScreen> {
                   color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.rocket_launch_rounded, color: Colors.white, size: 24),
+                child: const Icon(
+                  Icons.rocket_launch_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 12),
               const Expanded(
@@ -177,8 +182,11 @@ class _CareerScreenState extends State<CareerScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: categories.map((cat) {
-          final isSelected = state.selectedDepartment.toLowerCase() == cat.toLowerCase();
-          final displayLabel = cat == 'All' ? 'All Roles' : (cat[0].toUpperCase() + cat.substring(1).toLowerCase());
+          final isSelected =
+              state.selectedDepartment.toLowerCase() == cat.toLowerCase();
+          final displayLabel = cat == 'All'
+              ? 'All Roles'
+              : (cat[0].toUpperCase() + cat.substring(1).toLowerCase());
 
           return Padding(
             padding: const EdgeInsets.only(right: 8),
@@ -195,70 +203,19 @@ class _CareerScreenState extends State<CareerScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
                 side: BorderSide(
-                  color: isSelected ? const Color(0xFF003D99) : const Color(0xFFE5E7EB),
+                  color: isSelected
+                      ? const Color(0xFF003D99)
+                      : const Color(0xFFE5E7EB),
                 ),
               ),
               onSelected: (_) {
-                context.read<CareerBloc>().add(CareerDepartmentFilterEvent(cat));
+                context.read<CareerBloc>().add(
+                  CareerDepartmentFilterEvent(cat),
+                );
               },
             ),
           );
         }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildPerksStrip() {
-    final perks = [
-      {'icon': Icons.home_work_outlined, 'title': 'Hybrid & Remote'},
-      {'icon': Icons.trending_up_rounded, 'title': 'Fast Growth'},
-      {'icon': Icons.health_and_safety_outlined, 'title': 'Health Coverage'},
-      {'icon': Icons.school_outlined, 'title': 'Learning Budget'},
-    ];
-
-    return SizedBox(
-      height: 72,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: perks.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 10),
-        itemBuilder: (context, index) {
-          final perk = perks[index];
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.02),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: const Color(0xFFEFF6FF),
-                  child: Icon(perk['icon'] as IconData, size: 18, color: const Color(0xFF003D99)),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  perk['title'] as String,
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1F2937),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
       ),
     );
   }
@@ -269,7 +226,9 @@ class _CareerScreenState extends State<CareerScreen> {
         return const Center(
           child: Padding(
             padding: EdgeInsets.all(40.0),
-            child: LoadingWidget(message: 'Loading Sitefinity career positions...'),
+            child: LoadingWidget(
+              message: 'Loading Sitefinity career positions...',
+            ),
           ),
         );
 
@@ -277,9 +236,13 @@ class _CareerScreenState extends State<CareerScreen> {
         return Padding(
           padding: const EdgeInsets.all(16.0),
           child: ErrorView(
-            message: state.response.message ?? 'Unable to connect to Sitefinity Careers API.',
+            message:
+                state.response.message ??
+                'Unable to connect to Sitefinity Careers API.',
             onRetry: () {
-              context.read<CareerBloc>().add(const CareerFetchEvent(forceRefresh: true));
+              context.read<CareerBloc>().add(
+                const CareerFetchEvent(forceRefresh: true),
+              );
             },
           ),
         );
@@ -309,7 +272,10 @@ class _CareerScreenState extends State<CareerScreen> {
                       if (state.isOffline)
                         Container(
                           margin: const EdgeInsets.only(right: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.amber.shade50,
                             borderRadius: BorderRadius.circular(4),
@@ -317,7 +283,11 @@ class _CareerScreenState extends State<CareerScreen> {
                           ),
                           child: Text(
                             'Cached',
-                            style: TextStyle(fontSize: 10, color: Colors.amber.shade900, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.amber.shade900,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       Text(
@@ -342,7 +312,8 @@ class _CareerScreenState extends State<CareerScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: jobs.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 12),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   return _buildJobCard(jobs[index]);
                 },
@@ -386,7 +357,10 @@ class _CareerScreenState extends State<CareerScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFEFF6FF),
                     borderRadius: BorderRadius.circular(6),
@@ -410,18 +384,35 @@ class _CareerScreenState extends State<CareerScreen> {
             // Location & Experience
             Row(
               children: [
-                const Icon(Icons.location_on_outlined, size: 14, color: Color(0xFF6B7280)),
+                const Icon(
+                  Icons.location_on_outlined,
+                  size: 14,
+                  color: Color(0xFF6B7280),
+                ),
                 const SizedBox(width: 4),
                 Text(
                   job.jobLocation,
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563), fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF4B5563),
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 const SizedBox(width: 12),
-                const Icon(Icons.timer_outlined, size: 14, color: Color(0xFF6B7280)),
+                const Icon(
+                  Icons.timer_outlined,
+                  size: 14,
+                  color: Color(0xFF6B7280),
+                ),
                 const SizedBox(width: 4),
                 Text(
-                  job.jobExperience.isNotEmpty ? job.jobExperience : 'Experience: 4+ Years',
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563)),
+                  job.jobExperience.isNotEmpty
+                      ? job.jobExperience
+                      : 'Experience: 4+ Years',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF4B5563),
+                  ),
                 ),
               ],
             ),
@@ -433,9 +424,16 @@ class _CareerScreenState extends State<CareerScreen> {
               spacing: 6,
               runSpacing: 6,
               children: [
-                _buildBadge(Icons.work_outline, job.workTypes.isNotEmpty ? job.workTypes : 'Full Time'),
+                _buildBadge(
+                  Icons.work_outline,
+                  job.workTypes.isNotEmpty ? job.workTypes : 'Full Time',
+                ),
                 if (job.jobPostedDate.isNotEmpty)
-                  _buildBadge(Icons.calendar_today_outlined, 'Posted: ${job.jobPostedDate}', isHighlighted: true),
+                  _buildBadge(
+                    Icons.calendar_today_outlined,
+                    'Posted: ${job.jobPostedDate}',
+                    isHighlighted: true,
+                  ),
               ],
             ),
 
@@ -473,7 +471,10 @@ class _CareerScreenState extends State<CareerScreen> {
                     onPressed: () => _showJobDetailsModal(job),
                     child: const Text(
                       'View Details',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
@@ -495,7 +496,10 @@ class _CareerScreenState extends State<CareerScreen> {
                       children: [
                         Text(
                           'Apply Now',
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         SizedBox(width: 4),
                         Icon(Icons.arrow_forward_rounded, size: 14),
@@ -515,10 +519,14 @@ class _CareerScreenState extends State<CareerScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: isHighlighted ? const Color(0xFFEFF6FF) : const Color(0xFFF3F4F6),
+        color: isHighlighted
+            ? const Color(0xFFEFF6FF)
+            : const Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: isHighlighted ? const Color(0xFFBFDBFE) : const Color(0xFFE5E7EB),
+          color: isHighlighted
+              ? const Color(0xFFBFDBFE)
+              : const Color(0xFFE5E7EB),
         ),
       ),
       child: Row(
@@ -527,7 +535,9 @@ class _CareerScreenState extends State<CareerScreen> {
           Icon(
             icon,
             size: 12,
-            color: isHighlighted ? const Color(0xFF003D99) : const Color(0xFF6B7280),
+            color: isHighlighted
+                ? const Color(0xFF003D99)
+                : const Color(0xFF6B7280),
           ),
           const SizedBox(width: 4),
           Text(
@@ -535,7 +545,9 @@ class _CareerScreenState extends State<CareerScreen> {
             style: TextStyle(
               fontSize: 11,
               fontWeight: isHighlighted ? FontWeight.bold : FontWeight.w500,
-              color: isHighlighted ? const Color(0xFF003D99) : const Color(0xFF374151),
+              color: isHighlighted
+                  ? const Color(0xFF003D99)
+                  : const Color(0xFF374151),
             ),
           ),
         ],
@@ -549,11 +561,19 @@ class _CareerScreenState extends State<CareerScreen> {
         padding: const EdgeInsets.all(32),
         child: Column(
           children: [
-            const Icon(Icons.search_off_rounded, size: 48, color: Color(0xFF9CA3AF)),
+            const Icon(
+              Icons.search_off_rounded,
+              size: 48,
+              color: Color(0xFF9CA3AF),
+            ),
             const SizedBox(height: 12),
             const Text(
               'No Positions Found',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF111827)),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF111827),
+              ),
             ),
             const SizedBox(height: 6),
             const Text(
@@ -566,7 +586,9 @@ class _CareerScreenState extends State<CareerScreen> {
               onPressed: () {
                 _searchController.clear();
                 context.read<CareerBloc>().add(const CareerSearchEvent(''));
-                context.read<CareerBloc>().add(const CareerDepartmentFilterEvent('All'));
+                context.read<CareerBloc>().add(
+                  const CareerDepartmentFilterEvent('All'),
+                );
               },
               child: const Text('Reset Filters'),
             ),
@@ -632,7 +654,10 @@ class _CareerScreenState extends State<CareerScreen> {
                               const SizedBox(height: 4),
                               Text(
                                 '${job.department} • ${job.jobLocation}',
-                                style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563)),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF4B5563),
+                                ),
                               ),
                             ],
                           ),
@@ -651,11 +676,20 @@ class _CareerScreenState extends State<CareerScreen> {
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        _buildBadge(Icons.work_outline, job.workTypes.isNotEmpty ? job.workTypes : 'Full Time'),
+                        _buildBadge(
+                          Icons.work_outline,
+                          job.workTypes.isNotEmpty
+                              ? job.workTypes
+                              : 'Full Time',
+                        ),
                         if (job.jobExperience.isNotEmpty)
                           _buildBadge(Icons.timer_outlined, job.jobExperience),
                         if (job.jobPostedDate.isNotEmpty)
-                          _buildBadge(Icons.calendar_today_outlined, 'Posted: ${job.jobPostedDate}', isHighlighted: true),
+                          _buildBadge(
+                            Icons.calendar_today_outlined,
+                            'Posted: ${job.jobPostedDate}',
+                            isHighlighted: true,
+                          ),
                       ],
                     ),
 
@@ -667,7 +701,11 @@ class _CareerScreenState extends State<CareerScreen> {
                     if (responsibilities.isNotEmpty) ...[
                       const Text(
                         'Key Responsibilities',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF111827)),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF111827),
+                        ),
                       ),
                       const SizedBox(height: 8),
                       ...responsibilities.map(
@@ -676,11 +714,22 @@ class _CareerScreenState extends State<CareerScreen> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('• ', style: TextStyle(color: Color(0xFF003D99), fontWeight: FontWeight.bold, fontSize: 16)),
+                              const Text(
+                                '• ',
+                                style: TextStyle(
+                                  color: Color(0xFF003D99),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
                               Expanded(
                                 child: Text(
                                   resp,
-                                  style: const TextStyle(fontSize: 13, color: Color(0xFF374151), height: 1.4),
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF374151),
+                                    height: 1.4,
+                                  ),
                                 ),
                               ),
                             ],
@@ -694,7 +743,11 @@ class _CareerScreenState extends State<CareerScreen> {
                     if (requirements.isNotEmpty) ...[
                       const Text(
                         'Requirements & Qualifications',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF111827)),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF111827),
+                        ),
                       ),
                       const SizedBox(height: 8),
                       ...requirements.map(
@@ -703,11 +756,22 @@ class _CareerScreenState extends State<CareerScreen> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('✓ ', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14)),
+                              const Text(
+                                '✓ ',
+                                style: TextStyle(
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
                               Expanded(
                                 child: Text(
                                   req,
-                                  style: const TextStyle(fontSize: 13, color: Color(0xFF374151), height: 1.4),
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF374151),
+                                    height: 1.4,
+                                  ),
                                 ),
                               ),
                             ],
@@ -727,17 +791,28 @@ class _CareerScreenState extends State<CareerScreen> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.link_rounded, color: Color(0xFF003D99), size: 20),
+                            const Icon(
+                              Icons.link_rounded,
+                              color: Color(0xFF003D99),
+                              size: 20,
+                            ),
                             const SizedBox(width: 8),
                             const Expanded(
                               child: Text(
                                 'View on Idealake LinkedIn Page',
-                                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF003D99)),
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF003D99),
+                                ),
                               ),
                             ),
                             TextButton(
                               onPressed: () {
-                                UIHelpers.showSnackBar(context, 'Opening LinkedIn job posting: ${job.jobLinkedinLink}');
+                                UIHelpers.showSnackBar(
+                                  context,
+                                  'Opening LinkedIn job posting: ${job.jobLinkedinLink}',
+                                );
                               },
                               child: const Text('Open'),
                             ),
@@ -765,7 +840,10 @@ class _CareerScreenState extends State<CareerScreen> {
                         },
                         child: const Text(
                           'Apply for this Position',
-                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -793,7 +871,9 @@ class _CareerScreenState extends State<CareerScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) => Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
           child: Container(
             decoration: const BoxDecoration(
               color: Colors.white,
@@ -814,11 +894,18 @@ class _CareerScreenState extends State<CareerScreen> {
                           children: [
                             const Text(
                               'Apply for Role',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Text(
                               job.jobTitle,
-                              style: const TextStyle(fontSize: 13, color: Color(0xFF003D99), fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF003D99),
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ],
                         ),
@@ -835,8 +922,13 @@ class _CareerScreenState extends State<CareerScreen> {
                     controller: nameController,
                     decoration: InputDecoration(
                       labelText: 'Full Name *',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -846,8 +938,13 @@ class _CareerScreenState extends State<CareerScreen> {
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
                       labelText: 'Email Address *',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -857,8 +954,13 @@ class _CareerScreenState extends State<CareerScreen> {
                     keyboardType: TextInputType.phone,
                     decoration: InputDecoration(
                       labelText: 'Phone Number',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -867,8 +969,13 @@ class _CareerScreenState extends State<CareerScreen> {
                     controller: urlController,
                     decoration: InputDecoration(
                       labelText: 'Portfolio / LinkedIn / GitHub URL',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -884,7 +991,11 @@ class _CareerScreenState extends State<CareerScreen> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.upload_file_rounded, color: Color(0xFF003D99), size: 24),
+                        const Icon(
+                          Icons.upload_file_rounded,
+                          color: Color(0xFF003D99),
+                          size: 24,
+                        ),
                         const SizedBox(width: 10),
                         const Expanded(
                           child: Column(
@@ -892,18 +1003,27 @@ class _CareerScreenState extends State<CareerScreen> {
                             children: [
                               Text(
                                 'Resume / CV Attached',
-                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               Text(
                                 'Resume_Candidate.pdf (1.2 MB)',
-                                style: TextStyle(fontSize: 11.5, color: Color(0xFF6B7280)),
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  color: Color(0xFF6B7280),
+                                ),
                               ),
                             ],
                           ),
                         ),
                         TextButton(
                           onPressed: () {
-                            UIHelpers.showSnackBar(context, 'Document selector opened.');
+                            UIHelpers.showSnackBar(
+                              context,
+                              'Document selector opened.',
+                            );
                           },
                           child: const Text('Replace'),
                         ),
@@ -927,8 +1047,12 @@ class _CareerScreenState extends State<CareerScreen> {
                       onPressed: isSubmitting
                           ? null
                           : () async {
-                              if (nameController.text.trim().isEmpty || emailController.text.trim().isEmpty) {
-                                UIHelpers.showSnackBar(context, 'Please enter your name and email address.');
+                              if (nameController.text.trim().isEmpty ||
+                                  emailController.text.trim().isEmpty) {
+                                UIHelpers.showSnackBar(
+                                  context,
+                                  'Please enter your name and email address.',
+                                );
                                 return;
                               }
 
@@ -936,7 +1060,9 @@ class _CareerScreenState extends State<CareerScreen> {
                                 isSubmitting = true;
                               });
 
-                              await Future.delayed(const Duration(milliseconds: 900));
+                              await Future.delayed(
+                                const Duration(milliseconds: 900),
+                              );
 
                               if (context.mounted) {
                                 Navigator.pop(context);
@@ -950,11 +1076,17 @@ class _CareerScreenState extends State<CareerScreen> {
                           ? const SizedBox(
                               height: 20,
                               width: 20,
-                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
                             )
                           : const Text(
                               'Submit Application',
-                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                     ),
                   ),
