@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'api_exceptions.dart';
 import 'base_api_service.dart';
 import 'dio_client.dart';
+import 'session_manager.dart';
 
 /// Concrete Network Service implementation using Dio
 class NetworkApiService implements BaseApiService {
@@ -140,6 +141,16 @@ class NetworkApiService implements BaseApiService {
       case 200:
       case 201:
       case 202:
+        if (SessionManager.isSessionExpired(
+          response.data,
+          response.statusCode,
+          path: response.requestOptions.path,
+        )) {
+          throw UnauthorizedException(
+            _extractErrorMessage(response.data) ?? 'The current user is not allowed access',
+            response.statusCode,
+          );
+        }
         return response.data;
       case 400:
         throw BadRequestException(
@@ -213,6 +224,11 @@ class NetworkApiService implements BaseApiService {
   String? _extractErrorMessage(dynamic data) {
     if (data == null) return null;
     if (data is Map) {
+      if (data['error'] is Map) {
+        final errMap = data['error'] as Map;
+        if (errMap['message'] is String) return errMap['message'] as String;
+        if (errMap['code'] is String) return errMap['code'] as String;
+      }
       if (data.containsKey('error_description') && data['error_description'] is String) {
         return data['error_description'] as String;
       }

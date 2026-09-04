@@ -35,29 +35,33 @@ class CustomSearchBar extends StatelessWidget {
           ),
         ],
       ),
-      child: TextField(
-        controller: controller,
-        onChanged: onChanged,
-        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
-        decoration: InputDecoration(
-          isDense: true,
-          hintText: hintText,
-          hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textTertiary),
-          prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textSecondary, size: 22),
-          suffixIcon: controller != null && controller!.text.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.close_rounded, color: AppColors.textSecondary, size: 18),
-                  onPressed: () {
-                    controller!.clear();
-                    onClear?.call();
-                    onChanged?.call('');
-                  },
-                )
-              : null,
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+ 
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+        child: TextField(
+          controller: controller,
+          onChanged: onChanged,
+          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
+          decoration: InputDecoration(
+            isDense: true,
+            hintText: hintText,
+            hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textTertiary),
+            prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textSecondary, size: 22),
+            suffixIcon: controller != null && controller!.text.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.close_rounded, color: AppColors.textSecondary, size: 18),
+                    onPressed: () {
+                      controller!.clear();
+                      onClear?.call();
+                      onChanged?.call('');
+                    },
+                  )
+                : null,
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(vertical: 12),
+          ),
         ),
       ),
     );
