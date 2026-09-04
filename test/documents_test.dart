@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idealake_poc_ltfs/core/constants/api_endpoints.dart';
 import 'package:idealake_poc_ltfs/core/network/base_api_service.dart';
+import 'package:idealake_poc_ltfs/features/documents/models/document_model.dart';
 import 'package:idealake_poc_ltfs/features/documents/repository/documents_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -104,5 +105,32 @@ void main() {
 
     // Default Library should remain empty as per requirement
     expect(docs.isEmpty, true);
+  });
+
+  test('DocumentModel parses keyword Url and provides previewUrl for InApp preview', () {
+    final doc = DocumentModel.fromJson({
+      'Id': 'doc-preview-001',
+      'Title': 'Resume-Sample.pdf',
+      'Url': 'https://sitefinityheadlesscmsapi.idealake.com/docs/default-source/sample.pdf',
+      'Extension': '.pdf',
+      'TotalSize': 102400,
+    });
+
+    expect(doc.previewUrl, 'https://sitefinityheadlesscmsapi.idealake.com/docs/default-source/sample.pdf');
+  });
+
+  test('DocumentModel resolves full requestedUrl from relative Url and MediaUrl query params', () {
+    final doc = DocumentModel.fromJson({
+      'Id': 'doc-preview-002',
+      'Title': 'reactjsnotesforprofessionals-pdfpdf',
+      'Url': '/docs/default-source/resumedocument/reactjsnotesforprofessionals-pdfpdf',
+      'MediaUrl': '/docs/default-source/resumedocument/reactjsnotesforprofessionals-pdfpdf?sfvrsn=692ea0b_0&download=true',
+      'Extension': '.pdf',
+    });
+
+    expect(
+      doc.previewUrl,
+      'https://sitefinityheadlesscmsapi.idealake.com/docs/default-source/resumedocument/reactjsnotesforprofessionals-pdfpdf?sfvrsn=692ea0b_0&download=true',
+    );
   });
 }

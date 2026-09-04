@@ -20,6 +20,7 @@ import '../widgets/document_file_card.dart';
 import '../widgets/documents_filter_sheet.dart';
 import '../widgets/documents_settings_sheet.dart';
 import '../widgets/upload_document_sheet.dart';
+import 'document_preview_screen.dart';
 
 /// Screen displaying all files inside a specific Document Library matching Sitefinity Web Admin UI (Screenshots 2, 3, 5)
 class LibraryFilesScreen extends StatefulWidget {
@@ -139,7 +140,16 @@ class _LibraryFilesScreenState extends State<LibraryFilesScreen> {
                     prefixIcon: const Icon(Icons.visibility_rounded, color: AppColors.textWhite, size: 18),
                     onPressed: () {
                       Navigator.pop(context);
-                      UIHelpers.showSuccessSnackBar(context, 'Opening ${document.fileExtension.toUpperCase()} document...');
+                      final previewUrl = document.previewUrl;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => DocumentPreviewScreen(
+                            document: document,
+                            initialUrl: previewUrl,
+                          ),
+                        ),
+                      );
                     },
                   ),
                 ),
