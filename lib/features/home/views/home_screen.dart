@@ -41,21 +41,11 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.only(top: 16, bottom: 28),
         child: Column(
+          spacing: 12,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. System status alert card (Red vertical bar accent)
-            _buildSystemStatusCard(),
-
-            const SizedBox(height: 12),
-
-            // 2. Subscription Expired alert card (Red vertical bar accent)
-            _buildSubscriptionExpiredCard(),
-
-            const SizedBox(height: 12),
-
             // 3. Analytics timeline card (Line chart placeholder & "No stats enabled")
             _buildAnalyticsTimelineCard(),
-
             const SizedBox(height: 12),
 
             // 4. Everyone's content card
@@ -64,10 +54,14 @@ class _HomeScreenState extends State<HomeScreen> {
               items: _everyoneContent,
             ),
 
-            const SizedBox(height: 12),
-
             // 5. My content card
             _buildContentSectionCard(title: 'My content', items: _myContent),
+
+            // 1. System status alert card (Red vertical bar accent)
+            _buildSystemStatusCard(),
+
+            // 2. Subscription Expired alert card (Red vertical bar accent)
+            _buildSubscriptionExpiredCard(),
           ],
         ),
       ),
