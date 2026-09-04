@@ -47,14 +47,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _fillDemoCredentials(String username, String password) {
-    setState(() {
-      _usernameController.text = username;
-      _passwordController.text = password;
-    });
-    UIHelpers.showSuccessSnackBar(context, 'Filled credentials for $username');
-  }
-
   void _showForgotPasswordDialog() {
     final emailController = TextEditingController(
       text: _usernameController.text,
@@ -228,7 +220,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Email/Username Field
                   CustomTextField(
                     label: AppStrings.emailOrMobile,
-                    hintText: 'e.g. rakesh.sunar@idealake.com',
+                    hintText: 'e.g. user@idealake.com',
                     controller: _usernameController,
                     keyboardType: TextInputType.emailAddress,
                     prefixIcon: const Icon(
@@ -322,11 +314,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     height: 48,
                     child: OutlinedButton.icon(
                       onPressed: () {
-                        _fillDemoCredentials(
-                          'rakesh.sunar@idealake.com',
-                          'Sitefinity@2026',
+                        UIHelpers.showSnackBar(
+                          context,
+                          'Enterprise Single Sign-On (SSO) redirect is managed by your IT portal. Please enter your credentials above to sign in.',
                         );
-                        _handleLogin();
                       },
                       icon: const Icon(
                         Icons.domain_rounded,
